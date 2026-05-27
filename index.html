@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>东秦校园人生</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="game-container">
+<div id="attr-panel">
+  <div class="date-row"><span class="date-main" id="date-display"></span><span class="date-sub" id="weekday-display"></span></div>
+  <div class="attrs">
+    <div class="attr-item"><span class="attr-icon">❤️</span><span class="attr-name">健康</span><span class="attr-val" id="val-health"></span></div>
+    <div class="attr-item"><span class="attr-icon">😊</span><span class="attr-name">幸福</span><span class="attr-val" id="val-happy"></span></div>
+    <div class="attr-item"><span class="attr-icon">📖</span><span class="attr-name">悟性</span><span class="attr-val" id="val-wisdom"></span></div>
+    <div class="attr-item"><span class="attr-icon">✨</span><span class="attr-name">魅力</span><span class="attr-val" id="val-charm"></span></div>
+    <div class="attr-item"><span class="attr-icon">🏆</span><span class="attr-name">荣耀</span><span class="attr-val" id="val-glory"></span></div>
+    <div class="attr-item"><span class="attr-icon">💰</span><span class="attr-name">金钱</span><span class="attr-val" id="val-money"></span></div>
+    <div class="attr-item"><span class="attr-icon">🎤</span><span class="attr-name">歌唱</span><span class="attr-val" id="val-singing"></span></div>
+    <div class="attr-item"><span class="attr-icon">💳</span><span class="attr-name">鹏远余额</span><span class="attr-val" id="val-pengyuan"></span></div>
+  </div>
+  <div class="love-row" id="love-row" style="display:none;"><span>💕 女友</span><span class="gf-name" id="gf-name"></span><span>好感度</span><span class="gf-favor" id="gf-favor"></span></div>
+  <div class="favor-row" id="favor-row"><span>👨‍🏫 教师好感度 <span id="val-teacher-favor">80</span></span><span>👥 同学好感度 <span id="val-classmate-favor">80</span></span></div>
+  <div class="buff-row" id="buff-row"></div>
+</div>
+<div id="main-area"></div>
+<div id="choices-area"></div>
+<div id="bottom-bar"></div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
