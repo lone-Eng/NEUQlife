@@ -12,6 +12,14 @@ var ICON={health:'❤️',happiness:'😊',wisdom:'📖',charm:'✨',glory:'🏆
 var COURSE_NAMES={academicLang:'学术语言交流与沟通（中级）',cppProg:'C++程序设计基础',advancedMath:'高等数学建模A',pe:'体育',moralLaw:'思想道德法制',dataAnalysis:'智能数据分析导论',mentalHealth:'心理健康教育',careerPlan:'大学生职业生涯规划'};
 var TEACHER_NAMES={hanpeng:'韩鹏',tania:'Tania',shijianming:'史鉴明',zhourui:'周蕊'};
 
+var HOLIDAY_ROUTES={
+  home:{name:'返乡回家过节',dailyEffects:{money:-180,happiness:12,health:8},skipMeal:true,gfMod:{favorDecay:5}},
+  campus:{name:'留守东秦校园',dailyEffects:{},skipMeal:false,gfMod:{},hasCampusEvents:true},
+  couple:{name:'与女友短途出游',dailyEffects:{money:-160,happiness:15},skipMeal:false,gfMod:{favorBonus:18,specialChance:0.35},requiresGf:true},
+  internship:{name:'前往鸟爷控股短期实习',dailyEffects:{money:100,health:-10},skipMeal:false,gfMod:{rejectExtra:5}},
+  dorm:{name:'宿舍摆烂躺平',dailyEffects:{health:10,happiness:14,wisdom:-12},skipMeal:false,gfMod:{acceptPenalty:2}}
+};
+
 // ===== 游戏状态 =====
 var GS;
 function defaultState(){
@@ -35,7 +43,8 @@ function defaultState(){
     courseGrades:{academicLang:80,cppProg:80,advancedMath:80,pe:80,moralLaw:80,dataAnalysis:80,mentalHealth:80,careerPlan:80},
     taniaFavor:80,shijianmingFavor:80,zhouruiFavor:80,
     hanpengUnlocked:false,taniaUnlocked:false,shijianmingUnlocked:false,zhouruiUnlocked:false,
-    weekendEventReduction:0
+    weekendEventReduction:0,
+    holidayRoute:null
   };
 }
 
@@ -917,6 +926,403 @@ STORY_DAYS['2024-09-30']={
     '你随口说了句"恭喜"就低头看手机了。苏小暖的笑容僵了一瞬，然后默默走开了。')
 };
 
+// ==================== 国庆七天假期 ====================
+var HOLIDAY_DAYS={};
+
+HOLIDAY_DAYS['2024-10-01']={
+  dayNum:1,isSelection:true,
+  bgText:'十月一日举国欢庆，学校东操场举办新生国庆升旗仪式，全体留校师生到场参加，面向国旗行注目礼、齐唱国歌。全校课程、团校活动全面暂停，七天长假正式开启。',
+  campusEvents:[
+    {title:'国庆红色主题大创项目征集',text:'学校结合国庆节点，开启红色科创专项赛道征集，贴合爱国主题的项目立项通过率更高。',choices:[
+      {text:'A. 修改方案适配红色主题立项',effects:{wisdom:10,glory:5,health:-4,hanpengHaoGan:3},result:'你连夜修改项目方案，融入红色科创元素。虽然熬夜改方案很累，但看到焕然一新的项目计划书，成就感满满。'},
+      {text:'B. 坚持原有项目方向，不参与专项征集',effects:{},result:'你决定坚持原有项目方向。不参与专项征集意味着少了额外支持，但保持了自己的研究节奏。'}
+    ]},
+    {title:'大创小组国庆线上团建+项目研讨',text:'小组借着国庆契机开展线上云团建，同时同步对接假期项目进度。',choices:[
+      {text:'A. 全程参与团建与研讨',effects:{charm:4,wisdom:6,happiness:-3},result:'你全程参与了线上团建和项目研讨。增进了组员感情，项目进度也顺利推进，但占用了不少休闲时间。'},
+      {text:'B. 只参与工作研讨，拒绝闲聊团建',effects:{wisdom:4},result:'你只参与了工作研讨部分，高效同步了项目进度。虽然没有参与闲聊，但项目工作一点没落下。'}
+    ]}
+  ],
+  gfEvents:{
+    home:makeGfEvent('异地思念','校园举办国庆升旗仪式，女友独自前往观礼。看着身边皆是结伴同行的同学，她倍感孤单，拍完国旗现场照片发给你，希望你发国庆红包安慰情绪。',
+      '转账40元红包并耐心安慰',{money:-40},{gfFavor:10},'你立刻转账了40元红包，并附上大段安慰的话语。女友收到红包和消息后心情好了很多，回复了一连串可爱的表情包。',
+      '仅口头安慰，不发红包',{happiness:-3},{},'你只回了句"别难过啦"却没有实际行动。女友看了看手机屏幕上你敷衍的回复，嘴角的笑容慢慢消失。'),
+    campus:makeGfEvent('国旗打卡','清晨你们一同参加升旗仪式，结束后女友想在国旗打卡点合影留念，记录国庆首日。',
+      '耐心配合拍照、修整图片',{charm:2},{gfFavor:7},'你耐心地帮她找了最佳角度，拍了十几张照片，还帮她修图调色。女友翻看着照片，开心地在朋友圈发了九宫格。',
+      '觉得拍照麻烦，拒绝合影',{happiness:-6},{},'你觉得拍来拍去太麻烦，摆摆手说不想拍。女友收起手机，脸上的笑容消失了。'),
+    couple:makeGfEvent('海边亲密合影','二人一同前往海边观看国庆升旗仪式，海风拂动红旗氛围感十足，女友希望在国旗旁拥抱合影。',
+      '温柔配合亲密合影',{charm:3},{gfFavor:12},'你温柔地揽住她的肩膀，两人在国旗和朝阳的映衬下拍下了甜蜜的合照。海风拂过她的发梢，画面美得像电影海报。',
+      '碍于路人目光，委婉拒绝亲密动作',{},{gfFavor:-3},'你觉得周围人太多有些不好意思，轻轻推开了她的手。女友虽然表示理解，但眼中闪过一丝失落。'),
+    internship:makeGfEvent('错过升旗','你一早通勤上班错过升旗，女友分享现场画面，希望你下班之后陪她聊天解闷。',
+      '承诺下班抽空陪伴聊天',{},{gfFavor:6},'你回复说下班后一定好好陪她。虽然工作很累，但想到有人等着自己，心里也暖暖的。',
+      '上班劳累，直接拒绝',{happiness:-5},{},'你说太累了不想聊天。女友看着你冷淡的回复，沉默了很久没有再发消息过来。'),
+    dorm:makeGfEvent('错过升旗','你睡懒觉错过升旗仪式，女友发来现场消息，想约你出门逛校园。',
+      '起床陪同外出闲逛',{},{gfFavor:5},'你揉了揉眼睛从床上爬起来，陪她在校园里逛了一圈。虽然困意未消，但看到她开心的样子也值了。',
+      '赖床不起，拒绝出门',{happiness:-4},{},'你翻了个身继续睡。女友等了半天没等到回复，一个人默默在校园里走了一圈。')
+  }
+};
+
+HOLIDAY_DAYS['2024-10-02']={
+  dayNum:2,
+  bgText:'国庆出游迎来客流峰值，秦皇岛各大景区、商圈人潮涌动、道路拥堵。大部分学生已返乡或外出游玩，校园愈发安静。',
+  campusEvents:[
+    {title:'国庆主题调研问卷发放',text:'小组计划借助景区人流，线下发放国庆相关社会调研问卷。',choices:[
+      {text:'A. 前往景区线下发放问卷',effects:{glory:6,charm:5,health:-4},result:'你带上问卷前往景区，在人流中穿行发放。虽然人群拥挤、奔波劳累，但回收了大量有效问卷，数据质量超出预期。'},
+      {text:'B. 选择线上发放电子问卷',effects:{wisdom:5},result:'你选择在线上平台发放电子问卷，虽然样本量不如线下丰富，但效率更高、也更省力。'}
+    ]},
+    {title:'韩鹏老师留校值守·科创答疑',text:'韩鹏老师国庆留校值班，面向留校科创学生提供一对一项目答疑。',choices:[
+      {text:'A. 预约线下当面答疑',effects:{hanpengHaoGan:6,wisdom:9,happiness:-4},result:'你预约了韩鹏老师的时间，当面请教了许多项目中遇到的难题。韩老师耐心解答，你收获满满。'},
+      {text:'B. 仅线上简单提问',effects:{hanpengHaoGan:2},result:'你在微信上简单提了几个问题。韩老师很快回复了，但很多细节问题没来得及深入讨论。'}
+    ]}
+  ],
+  gfEvents:{
+    home:makeGfEvent('异地奶茶','校外景区人山人海，女友刷到朋友圈全是情侣出游动态，触景生情十分想念你，希望你帮忙点奶茶外卖送到宿舍。',
+      '下单奶茶外卖',{money:-40},{gfFavor:10},'你立刻下单了她最爱的口味。半小时后外卖送到，女友捧着奶茶发来一张自拍，笑得像朵花。',
+      '拒绝帮忙点单，让她自行购买',{happiness:-3},{},'你说"你自己点不就行了"。女友看着消息，默默打开外卖App自己下单了一杯便宜点的。'),
+    campus:makeGfEvent('纪念徽章','校外游客太多，二人选择留在校内闲逛。路过校园文创小摊，女友想要一枚国庆纪念徽章。',
+      '花钱买下徽章赠予对方',{money:-28},{gfFavor:8},'你掏钱买下了那枚精致的国庆纪念徽章，亲手别在她的衣领上。女友低头看着徽章，笑得眼睛弯弯的。',
+      '认为饰品无用，拒绝购买',{happiness:-5},{},'你说"这种小东西买了也是浪费钱"。女友默默放下了手中的徽章，脸上的期待消失了。'),
+    couple:makeGfEvent('排队买挂件','商圈内摆满国庆限定周边，女友想要收集全套国庆小挂件。',
+      '排队买下全套挂件',{money:-50,charm:2},{gfFavor:15},'你陪她排了将近半小时的队，终于集齐了全套挂件。女友抱着挂件袋子开心得像个孩子，不停比划着要挂在哪里。',
+      '不愿长时间排队，只选购一件',{},{gfFavor:5},'你看着长长的队伍皱起了眉头，最终只买了一件。女友虽然有点小失望，但还是把那一件小心地收进了包里。'),
+    internship:makeGfEvent('下班接送','女友独自逛商圈，人多嘈杂心生不安，希望你下班之后接她回校。',
+      '下班第一时间前往接送',{},{gfFavor:7},'你下班后一刻没耽搁，赶到商圈接上了她。看到她站在人群中的身影，你快步走过去牵起了她的手。',
+      '身心疲惫，拒绝前往',{happiness:-6},{},'你说太累了不想再出门。女友在喧闹的人群中独自打车回了学校，一路上沉默不语。'),
+    dorm:makeGfEvent('逛街邀约','女友想去校外国庆商圈游玩，邀约你一同出门。',
+      '放下游戏陪同逛街',{},{gfFavor:5},'你关掉了游戏，换好衣服陪她出了门。虽然商场人很多，但两个人一起逛吃逛吃还挺开心的。',
+      '不愿走动，留在宿舍',{happiness:-5},{},'你说不想出门，头也不回地继续打游戏。女友在宿舍楼下等了十分钟，最后一个人去了商圈。')
+  }
+};
+
+HOLIDAY_DAYS['2024-10-03']={
+  dayNum:3,
+  bgText:'假期过半，中秋余温仍在。海边、校园湖畔开启双节主题花灯展，灯火连绵、光影璀璨，节日氛围达到顶峰。',
+  campusEvents:[
+    {title:'拍摄花灯夜景用作项目宣传素材',text:'夜晚花灯景色优美，适合拍摄实拍素材，丰富大创项目展示内容。',choices:[
+      {text:'A. 夜晚外出拍摄素材',effects:{charm:5,wisdom:4,health:-3},result:'你带着相机来到湖边，花灯倒映在水面上，光影交错美不胜收。你拍下了大量高质量素材，项目的宣传材料有了着落。'},
+      {text:'B. 仅白天室内拍摄，夜晚不外出',effects:{},result:'你选择白天在室内简单拍了几张。虽然没有花灯夜景的加持，但基本的素材也够用了。'}
+    ]},
+    {title:'观看国庆科技创新主题纪录片',text:'大创群组转发国家级科创发展纪录片，可供学习行业知识。',choices:[
+      {text:'A. 完整观看并记录知识点',effects:{wisdom:11,glory:2},result:'你花了一个多小时认真看完了整部纪录片，做了满满三页笔记。国家科技发展的历程让你对自己的项目有了更深的思考。'},
+      {text:'B. 跳过视频刷取娱乐内容',effects:{happiness:4,wisdom:-4},result:'你看了五分钟就关掉了，打开短视频App刷了一晚上。虽然当下很爽，但事后想起觉得自己浪费了不少时间。'}
+    ]}
+  ],
+  gfEvents:{
+    home:makeGfEvent('视频通话','女友独自前往海边观看花灯展，看着周围成双成对的游客内心落寞，想要和你长时间视频通话分享夜景。',
+      '接通视频全程陪伴',{money:-40},{gfFavor:10},'你接通了视频电话，把手机支在桌前，陪她看了整整两个小时的花灯展。虽然异地相隔，但屏幕里的她笑容灿烂，仿佛你就在身旁。',
+      '借口忙碌，简短挂断通话',{happiness:-4},{},'你说"现在有点忙"就匆匆挂断了。女友看着手机屏幕上不到两分钟的通话记录，心里一阵酸涩。'),
+    campus:makeGfEvent('花灯长廊','校园湖畔花灯长廊景色迷人，女友邀约你夜晚一同散步赏灯。',
+      '欣然陪同漫步赏灯',{health:3},{gfFavor:8},'夜晚的湖畔被花灯点缀得如同梦境。你们并肩漫步在花灯长廊下，五彩的灯光映在她的脸庞上，美得让人心动。',
+      '不愿夜间出门，留在宿舍',{happiness:-6},{},'你说晚上不想出门。女友一个人走在花灯长廊下，身旁的位置空落落的，看着别人成双成对，心里很不是滋味。'),
+    couple:makeGfEvent('花灯下的牵手','二人共赏海边大型花灯秀，灯火与红旗交相辉映，氛围暧昧，女友主动牵手，希望并肩看完整场演出。',
+      '牵手陪伴全程',{charm:5},{gfFavor:16},'你紧紧牵住她的手，十指相扣。海风吹拂、花灯闪烁，你们并肩看完了整场花灯秀。她靠在你肩上，轻声说这是她度过的最浪漫的国庆节。',
+      '人群喧闹保持距离，不愿牵手',{},{gfFavor:-2},'你觉得周围人太多，默默把手抽了回去，和她保持着一点距离。女友没有说什么，但整场演出下来，她的目光更多停留在你身上而不是花灯上。'),
+    internship:makeGfEvent('下班陪伴','花灯展热闹非凡，女友独自观赏倍感孤单，希望你下班赶来陪伴。',
+      '下班后赴约陪伴赏灯',{},{gfFavor:8},'你加班到八点，但还是赶去了湖边。远远看到她独自站在花灯旁的背影，你加快脚步跑了过去。她回头看见你，疲惫的脸上终于绽开了笑容。',
+      '疲惫不堪，拒绝外出',{happiness:-7},{},'你说实在走不动了。女友在花灯展的人群中独自拍了张照片，发给你后你很久才回复了一个表情。'),
+    dorm:makeGfEvent('花灯分享','女友发来花灯夜景照片，想和你聊天分享感受。',
+      '放下游戏认真聊天',{},{gfFavor:4},'你暂时退出了游戏，认真回复她的每一张照片和每一条消息。聊着聊着竟也聊了一个多小时，感觉比打游戏充实多了。',
+      '专注游戏，敷衍回复',{happiness:-3},{},'你一边打游戏一边随口回了几个"好看""嗯"。女友看着你越来越短的回复，发消息的频率也越来越低。')
+  }
+};
+
+HOLIDAY_DAYS['2024-10-04']={
+  dayNum:4,
+  bgText:'假期进入倦怠阶段，出游疲惫、居家无聊成为常态，校园人流量小幅回升，节日热闹氛围逐步回落。',
+  campusEvents:[
+    {title:'项目代码出现漏洞',text:'组员分散各地，项目代码突发BUG，无法线下求助。',choices:[
+      {text:'A. 独自熬夜排查修复代码',effects:{wisdom:12,happiness:-5},result:'你一个人对着屏幕排查到凌晨三点，终于在无数次的尝试后找到了BUG根源。代码重新跑通的那一刻，疲惫中涌起一阵难以言喻的满足。'},
+      {text:'B. 搁置问题，等待开学再处理',effects:{wisdom:-5},result:'你决定暂时搁置。虽然现在轻松了，但问题不会自己消失，开学后还得花时间解决。'}
+    ]},
+    {title:'申请国庆专属独立实验室',text:'学校开放假期专属独立实验室，环境安静适合攻坚项目。',choices:[
+      {text:'A. 提交申请使用专属工位',effects:{hanpengHaoGan:4,wisdom:7,happiness:-3},result:'你填写了申请表，如愿拿到了独立实验室的钥匙。安静的环境让工作效率翻倍，韩鹏老师也对你主动申请的态度表示赞赏。'},
+      {text:'B. 使用公共工位，不申请专属房间',effects:{},result:'你觉得申请流程太麻烦，继续在公共工位工作。虽然人多嘈杂，但凑合也能用。'}
+    ]}
+  ],
+  gfEvents:{
+    home:makeGfEvent('敏感多疑','双方聊天频次减少，女友变得敏感多疑，认为你疏于关心，情绪低落，希望你发红包哄她开心。',
+      '发红包安抚情绪',{money:-40},{gfFavor:10},'你发了一个红包并附上暖心的话。女友收到后情绪明显好转，回复的语气也轻快了许多。异地不易，一个红包换一份安心，值得。',
+      '认为对方无理取闹，拒绝安抚',{happiness:-4},{},'你觉得她在无理取闹，回了句"你想多了"。女友看着你的消息，删掉了已经打好的大段倾诉，只回了一个"嗯"。'),
+    campus:makeGfEvent('团圆餐','二人都陷入假期倦怠，女友邀约你去食堂品尝国庆限定团圆餐。',
+      '陪同共进晚餐',{money:-30},{gfFavor:7},'你们一起去了食堂，点了两份国庆限定团圆餐。红烧肉的香气、热腾腾的米饭、对面坐着的人，简单的晚餐却吃出了家的味道。',
+      '懒得走动，拒绝一同就餐',{happiness:-5},{},'你说不想动。女友一个人去了食堂，坐在角落里默默地吃完了那份本该两个人分享的团圆餐。'),
+    couple:makeGfEvent('宅居追剧','连日旅途奔波身心俱疲，女友不想外出，只想和你在住处追剧休息。',
+      '留下来安静陪伴追剧',{happiness:5},{gfFavor:10},'你依偎在她身边，两人窝在沙发上看了一整天的剧。没有景区的喧嚣和排队的疲惫，这种安静的陪伴反而更加珍贵。',
+      '想出门闲逛，拒绝宅居',{},{gfFavor:-4},'你说闷在屋里太无聊，非要出门转转。女友虽然跟着你出了门，但一路上兴致不高，你们没逛多久就各自回了住处。'),
+    internship:makeGfEvent('耐心沟通','你连日加班心态烦躁，回复消息愈发敷衍，女友希望和你认真沟通一次。',
+      '耐心抽出时间沟通',{},{gfFavor:6},'你放下手头的工作，认真地和她通了一次长长的电话。聊完后两个人都轻松了很多——原来很多问题，只要愿意沟通就不是问题。',
+      '心情烦躁，直接拒绝交流',{happiness:-8},{},'你说"我现在很烦，别来添乱"。女友默默挂掉了电话。这一晚，你们谁也没有再给对方发一条消息。'),
+    dorm:makeGfEvent('认真回应','你作息混乱、回复消息拖沓，女友积攒委屈，希望你认真回应她的消息。',
+      '放下游戏安抚对方',{},{gfFavor:4},'你放下手柄，给她打了一个电话。虽然只是简单的几句安慰，但电话那头她的声音明显放松了下来。',
+      '依旧敷衍回复',{happiness:-4},{},'你继续打游戏，隔很久才回一两个字。女友看着对话框里你越来越敷衍的回复，把打好的话一行一行地删掉了。')
+  }
+};
+
+HOLIDAY_DAYS['2024-10-05']={
+  dayNum:5,
+  bgText:'部分游客、学生提前返程，车站、高速迎来返程小高峰，返校人数增多，校园逐步恢复人气。',
+  campusEvents:[
+    {title:'返校学长分享国赛备赛经验',text:'参与国家级科创赛事的学长提前返校，可请教备赛技巧。',choices:[
+      {text:'A. 主动上前请教经验',effects:{wisdom:10,glory:3},result:'你主动上前和学长攀谈，学长非常热情地分享了他的备赛经历和评委偏好。这些经验不是书本上能学到的，含金量极高。'},
+      {text:'B. 擦肩而过，不予交流',effects:{},result:'你犹豫了一下没有上前。学长匆匆走过，一段潜在的学习机会就这样错过了。'}
+    ]},
+    {title:'完成假期项目初稿撰写',text:'小组要求在假期尾声提交完整项目初稿。',choices:[
+      {text:'A. 用心打磨初稿内容',effects:{wisdom:8,glory:4},result:'你花了整整一天反复打磨初稿，从逻辑框架到数据呈现都力求完美。提交后组员纷纷点赞，说这是组里最用心的一份。'},
+      {text:'B. 敷衍完成应付检查',effects:{wisdom:-3},result:'你随便拼凑了一篇交了上去。虽然暂时应付过去了，但自己心里清楚这份初稿的水分有多大。'}
+    ]}
+  ],
+  gfEvents:{
+    home:makeGfEvent('返程忙碌','返程车流拥堵，你忙于赶路迟迟不回消息，女友内心缺乏安全感，希望你发红包弥补冷落。',
+      '发红包道歉安抚',{money:-40},{gfFavor:10},'你把车靠边停了一下，给她发了一个红包，附上一句"路上太堵了，回去好好陪你"。女友的焦虑被这句话瞬间化解。',
+      '自认忙碌无需解释，拒绝道歉',{happiness:-4},{},'你说"路上堵车又不是我的错"。女友没有回复，但你已经能感受到屏幕那头传来的低气压。'),
+    campus:makeGfEvent('超市采购','大批同学返校，女友邀约你去校园超市采购零食囤货。',
+      '陪同采购零食',{money:-35},{gfFavor:7},'你们推着购物车在货架间穿梭，她往车里扔了一堆零食，你笑着帮她拎袋子。采购完回宿舍的路上，两个人各抱着一袋零食，边走边吃。',
+      '不愿出门，直接拒绝',{happiness:-5},{},'你说"你自己去就行了"。女友只好一个人去了超市，结账时看着前面帮女朋友拎袋子的男生，轻轻叹了口气。'),
+    couple:makeGfEvent('人群守护','景区人流再度拥挤，女友害怕人群冲撞，希望你全程牵住她保护她。',
+      '全程贴身守护牵手同行',{charm:4},{gfFavor:13},'你牢牢牵住她的手，在人流中为她开辟出一条安全通道。她把你的手握得很紧，偶尔抬头看你的眼神里全是依赖和信任。',
+      '自顾行走，无法时刻照看',{},{gfFavor:-3},'你专心看导航找路，没有注意到她在人群中好几次被挤得踉跄。她抿着嘴跟在你身后，一路沉默。'),
+    internship:makeGfEvent('加班道歉','公司临时加班，你延后下班，错过了和女友的约定见面时间。',
+      '主动道歉并购买小礼物赔罪',{money:-25},{gfFavor:7},'你在下班的路上买了一束小花，见到她时郑重地道了歉。女友接过花，脸上的委屈慢慢化成了笑意。',
+      '认为加班身不由己，不作道歉',{happiness:-6},{},'你说"加班又不是我乐意的"。女友等了你两个小时，听到这句话后转身就走了。'),
+    dorm:makeGfEvent('出门散步','室友陆续返校，女友看到他人成双成对心生羡慕，约你出门散步。',
+      '出门陪同散步',{},{gfFavor:5},'你伸了个懒腰从床上起来，陪她在校园里走了一圈。夕阳下的操场很安静，你们一边走一边聊，感觉还不错。',
+      '坚守宿舍，拒绝外出',{happiness:-5},{},'你说不想动。女友在操场边等了又等，最后发了一条消息："算了，我回去了。"')
+  }
+};
+
+HOLIDAY_DAYS['2024-10-06']={
+  dayNum:6,
+  bgText:'假期临近尾声，绝大多数学生结束出行、返乡，陆续返回校园。大家开始收拾行李、调整心态，为恢复上课做准备。',
+  campusEvents:[
+    {title:'大创项目中期复盘会议',text:'开展假期项目中期复盘，总结七日工作进度与问题。',choices:[
+      {text:'A. 认真整理资料、参与复盘',effects:{wisdom:9,glory:4},result:'你整理了假期所有的工作记录，在会上条理清晰地汇报了项目进展。组员们对你的总结能力刮目相看，团队协作效率明显提升。'},
+      {text:'B. 敷衍应对，快速结束会议',effects:{wisdom:-3},result:'你随便说了几句就催着大家散会。会议草草结束，许多问题没有讨论清楚，给后续工作埋下了隐患。'}
+    ]},
+    {title:'归档假期科创资料',text:'需要将假期调研数据、学习文件统一分类归档。',choices:[
+      {text:'A. 细心整理归档',effects:{wisdom:6},result:'你把假期所有资料分门别类整理好，建立了清晰的目录结构。韩鹏老师在群里看到后点了赞，说这是做科创项目应有的态度。'},
+      {text:'B. 随意堆放，不做整理',effects:{},result:'你把资料随手塞进了文件夹。虽然现在省了一点时间，但开学后找资料时估计要头疼了。'}
+    ]}
+  ],
+  gfEvents:{
+    home:makeGfEvent('规划未来','假期即将结束，女友开始规划开学后的相处日常，滔滔不绝和你分享想法，希望你认真倾听回应，并准备一份心意红包。',
+      '耐心倾听并发放心意红包',{money:-40},{gfFavor:10},'你认真听她一条一条地讲开学后的计划，然后发了一个红包，说"开学后每天都能见到你了"。女友开心地收下了红包，发来一长串"期待开学"的消息。',
+      '敷衍应对，不在意对方规划',{happiness:-4},{},'你说"开学再说呗，现在想那么多干嘛"。女友的热情被你这盆冷水浇了个透，后面她没再提起任何计划。'),
+    campus:makeGfEvent('梳理知识点','临近开学，女友担心课业跟不上，希望你帮忙梳理各科预习知识点。',
+      '耐心协助梳理知识点',{wisdom:3},{gfFavor:8},'你拿出课本和她一起从头梳理了一遍。梳理的过程中你自己也理清了不少之前模糊的概念，两个人互相讨论、互相促进，效率很高。',
+      '不愿动脑，拒绝帮忙',{happiness:-6},{},'你说"我还有自己的事要忙"。女友只好一个人对着课本发愁，密密麻麻的公式看得她头昏脑涨。'),
+    couple:makeGfEvent('情侣写真','旅行即将结束，女友十分不舍，想要拍摄一组情侣合照留存假期回忆。',
+      '认真拍摄情侣写真',{money:-40,charm:3},{gfFavor:14},'你请了路人帮忙，在景区最美的几个角落拍了一组情侣写真。每一张照片里你们都笑得很灿烂——这是这个假期最珍贵的纪念。',
+      '嫌拍照麻烦，减少拍摄数量',{},{gfFavor:-4},'你说"拍几张就行了，别拍了"。女友默默收起了手机，那些想一起打卡的机位，最终只留在了她的收藏夹里。'),
+    internship:makeGfEvent('晚间散步','实习临近收尾，工作压力加大，女友想约你晚间散步舒缓压力。',
+      '放下工作陪同散步',{},{gfFavor:7},'你合上电脑，和她一起在操场上走了一圈又一圈。夜晚的凉风吹散了工作的烦躁，牵着她的手，你感到久违的放松。',
+      '压力过大，没有心情外出',{happiness:-7},{},'你说"我现在压力很大，你别烦我"。女友没有再多说，默默帮你倒了一杯热水放在桌边。你很久以后才注意到那杯水已经凉透了。'),
+    dorm:makeGfEvent('调整作息','女友劝说你调整作息，不要再熬夜打游戏，迎接开学。',
+      '听从劝告，早睡调整作息',{health:5},{gfFavor:5},'你说"好吧，今天早点睡"。关了灯躺在床上，你发现原来早睡的感觉真的不错。女友收到你发的"晚安"后，安心地也睡了。',
+      '拒绝改变，继续熬夜',{happiness:-4},{},'你说"我自己有数，不用你管"。女友没有再劝，但她知道明天开学你的状态一定很糟糕。')
+  }
+};
+
+HOLIDAY_DAYS['2024-10-07']={
+  dayNum:7,
+  bgText:'国庆长假最后一日，所有学生基本完成返校。街头国庆装饰仍在，但节日氛围逐渐褪去，全员调整作息、收拾状态，明日将恢复早八课程、重启团校系统。',
+  campusEvents:[
+    {title:'提交假期全部项目成果',text:'向韩鹏老师上交七天假期的大创进度成果，等待点评。',choices:[
+      {text:'A. 规整整理后完整提交',effects:{hanpengHaoGan:7,glory:5},result:'你将七天的工作成果精心整理成一份详实的报告提交了上去。韩鹏老师仔细审阅后给出了高度评价，说你是假期最用心的同学之一。'},
+      {text:'B. 仓促提交，未做整理',effects:{hanpengHaoGan:-3},result:'你急急忙忙拼凑了一版交了上去。韩鹏老师看后微微皱眉，没有多说什么，但你知道他对你的期待打了折扣。'}
+    ]},
+    {title:'调整作息适配开学',text:'假期作息紊乱，需要调整生物钟，应对次日早八课程。',choices:[
+      {text:'A. 早睡早起调整作息',effects:{health:8},result:'你晚上十点就关了手机上了床。虽然刚开始不太习惯，但第二天早上精神饱满地醒来，为开学做好了充分准备。'},
+      {text:'B. 延续熬夜习惯',effects:{health:-6},result:'你忍不住又熬夜到了凌晨两点。等到第二天早上闹钟响的时候，你深刻地后悔了自己昨晚的选择。'}
+    ]}
+  ],
+  gfEvents:{
+    home:makeGfEvent('告别红包','你准备次日返校，长达七日的异地相处即将结束。女友感慨异地难熬，期盼线下见面，希望收到一份告别红包圆满收尾假期。',
+      '发放红包并约定返校见面',{money:-40},{gfFavor:12},'你发了一个红包，和她约定明天一返校就第一时间见面。女友开心得像只小鸟，连着发了好几条"等你回来"。七天异地终于要结束了。',
+      '仅口头约定，不发红包',{happiness:-3},{},'你说"明天就见到了还发什么红包"。女友虽然嘴上说没事，但心里还是有一点点小失落。'),
+    campus:makeGfEvent('操场谈心','假期最后一晚，二人坐在操场吹晚风、看国旗，感慨假期短暂，期待开学朝夕相伴。女友想和你静坐整晚谈心。',
+      '全程陪伴静坐聊天',{health:4},{gfFavor:9},'你们在操场的台阶上坐了很久，聊了很多——关于假期、关于未来、关于彼此。晚风很凉，但两颗心都很暖。',
+      '夜间寒凉，想提前回宿舍',{happiness:-5},{},'你说"太冷了，我先回去了"。女友一个人又在操场坐了一会儿，看着天上的星星，心里有种说不出的空落。'),
+    couple:makeGfEvent('旅途返程','旅途结束踏上返程，女友依偎在你身旁，不舍这段甜蜜假期，期待开学日常相伴。',
+      '温柔安抚，承诺多陪伴对方',{charm:5},{gfFavor:18},'你搂着她的肩膀，轻声承诺开学后每天都会陪她。她靠在你身上，说这七天是她大学里最幸福的时光。车子驶入校园，你们的手仍然紧紧握在一起。',
+      '旅途疲惫，沉默不语',{},{gfFavor:-3},'你太累了，一路几乎没怎么说话。女友几次想和你分享旅途的感受，看到你疲惫的样子又咽了回去。'),
+    internship:makeGfEvent('实习结束','国庆实习正式结束，你终于摆脱加班劳累。女友心疼你七日辛苦，想好好陪伴你放松一天。',
+      '接受陪伴，轻松相处',{},{gfFavor:8},'你终于放下了工作的担子。和她一起在校园里随便走走、吃个饭、看场电影——原来最简单的相处就是最好的放松。',
+      '身心俱疲，想要独自休息',{happiness:-6},{},'你说"我想一个人静静"。女友虽然很想陪你，但还是尊重了你的选择，轻轻说了句"好好休息"。'),
+    dorm:makeGfEvent('开学劝诫','假期摆烂生活即将结束，女友叮嘱你开学后减少游戏时间，多学习、多陪伴她。',
+      '答应对方，愿意做出改变',{},{gfFavor:6},'你认真地点了点头，说开学后一定减少游戏时间，多花时间学习和陪她。女友开心地笑了，眼睛里藏着小小的期待。',
+      '口头敷衍，不愿改变现状',{happiness:-3},{},'你说"知道了知道了"眼睛却没离开屏幕。女友叹了口气，不知道开学后你还能不能兑现这句敷衍的承诺。')
+  }
+};
+
+// ==================== 国庆假期渲染 ====================
+function renderCampusEvent(evt,callback){
+  var storyEl=$('story-text');
+  var ft='<span class="phase-tag main">🔬 大创事件</span><br><strong>'+evt.title+'</strong>\n\n'+evt.text;
+  storyEl.innerHTML=storyEl.innerHTML+'<br><br>'+ft.replace(/\n/g,'<br>');
+  updatePanel();
+  $('choices-area').innerHTML='';
+  for(var i=0;i<evt.choices.length;i++){
+    var ec=evt.choices[i];
+    var btn=document.createElement('button');btn.textContent=ec.text;
+    (function(ec){
+      btn.onclick=function(){
+        var changes=doEffects(Object.assign({},ec.effects||{}));
+        $('choices-area').innerHTML='';
+        showPopup(evt.title,ec.result||'',changes,null,function(){
+          updatePanel();if(callback)callback();
+        });
+      };
+    })(ec);
+    $('choices-area').appendChild(btn);
+  }
+}
+
+function renderHolidayDay(dk){
+  var hd=HOLIDAY_DAYS[dk];
+  if(!hd)return;
+  var wd=weekday(GS.year,GS.month,GS.day);
+  var dStr=fmtDate(GS.year,GS.month,GS.day);
+  var routeKey=GS.holidayRoute;
+  var route=routeKey?HOLIDAY_ROUTES[routeKey]:null;
+
+  if(hd.isSelection&&!routeKey){
+    // Oct 1: route selection first
+    $('main-area').innerHTML='<div id="story-title">📅 '+dStr+'　星期'+wd+' · 国庆第1天</div><div id="story-text">'+hd.bgText.replace(/\n/g,'<br>')+'<br><br><div style="color:#8b7d6b;font-size:.85em;">👇 请选择你的七日过节路线（选定后10.2-10.7不可更改）</div></div>';
+    updatePanel();
+    $('choices-area').innerHTML='';
+    var routeKeys=['home','campus','couple','internship','dorm'];
+    for(var r=0;r<routeKeys.length;r++){
+      var rk=routeKeys[r];
+      var rd=HOLIDAY_ROUTES[rk];
+      if(rd.requiresGf&&!GS.gfUnlocked)continue;
+      var btn=document.createElement('button');btn.textContent=rd.name;
+      (function(rk,rd){
+        btn.onclick=function(){
+          GS.holidayRoute=rk;
+          applyHolidayDay(hd,dk,rk,function(){finishHolidayDay();});
+        };
+      })(rk,rd);
+      $('choices-area').appendChild(btn);
+    }
+    return;
+  }
+
+  if(!routeKey){GS.holidayRoute='campus';routeKey='campus';route=HOLIDAY_ROUTES.campus;}
+  applyHolidayDay(hd,dk,routeKey,function(){finishHolidayDay();});
+}
+
+function applyHolidayDay(hd,dk,routeKey,callback){
+  var route=HOLIDAY_ROUTES[routeKey];
+  var wd=weekday(GS.year,GS.month,GS.day);
+  var dStr=fmtDate(GS.year,GS.month,GS.day);
+
+  // Apply daily route effects
+  if(route.dailyEffects){
+    var routeChanges=doEffects(Object.assign({},route.dailyEffects));
+    if(routeKey==='home'&&GS.gfUnlocked){
+      GS.gfFavor=Math.max(0,GS.gfFavor-5);
+    }
+    if(routeKey==='couple'&&GS.gfUnlocked){
+      GS.gfFavor=Math.max(0,GS.gfFavor+18);
+    }
+    updatePanel();
+  }
+
+  var storyEl=$('story-text');
+  var titleHtml='<div id="story-title">📅 '+dStr+'　星期'+wd+' · 国庆第'+hd.dayNum+'天</div>';
+  var bgHtml=hd.bgText.replace(/\n/g,'<br>');
+  var routeLabel='<br><span style="color:#1a3a5c;font-size:.85em;">🏷️ 当前路线：'+route.name+'</span>';
+  storyEl.innerHTML=titleHtml+'<div id="story-text">'+bgHtml+routeLabel+'</div>';
+  updatePanel();
+  $('choices-area').innerHTML='';
+
+  // Campus events
+  if(routeKey==='campus'&&hd.campusEvents&&hd.campusEvents.length>0){
+    var evtIdx=0;
+    function nextCampusEvent(){
+      if(evtIdx>=hd.campusEvents.length){
+        showHolidayGfOrFinish(hd,routeKey,callback);
+        return;
+      }
+      renderCampusEvent(hd.campusEvents[evtIdx],function(){
+        evtIdx++;nextCampusEvent();
+      });
+    }
+    nextCampusEvent();
+    return;
+  }
+
+  showHolidayGfOrFinish(hd,routeKey,callback);
+}
+
+function showHolidayGfOrFinish(hd,routeKey,callback){
+  if(GS.gfUnlocked&&hd.gfEvents&&hd.gfEvents[routeKey]){
+    var ge=hd.gfEvents[routeKey];
+    var storyEl=$('story-text');
+    var ft='<span class="phase-tag love">💕 女友事件</span><br><strong>'+ge.title+'</strong>\n\n'+ge.text;
+    storyEl.innerHTML=storyEl.innerHTML+'<br><br>'+ft.replace(/\n/g,'<br>');
+    updatePanel();
+    $('choices-area').innerHTML='';
+    renderHolidayGfChoices(ge,routeKey,function(){if(callback)callback();});
+  }else{
+    if(callback)callback();
+  }
+}
+
+function renderHolidayGfChoices(ge,routeKey,callback){
+  var routeMod=HOLIDAY_ROUTES[routeKey].gfMod||{};
+  for(var i=0;i<ge.choices.length;i++){
+    var gc=ge.choices[i];
+    var btn=document.createElement('button');btn.textContent=gc.text;
+    (function(gc,idx){
+      btn.onclick=function(){
+        var eff=Object.assign({},gc.effects||{});
+        var gfChanges={};
+        if(gc.gfEffects){
+          GS.breakupProb=0;
+          for(var k2 in gc.gfEffects){
+            if(gc.gfEffects.hasOwnProperty(k2)&&GS.hasOwnProperty(k2)&&typeof GS[k2]==='number'){
+              var adj=gc.gfEffects[k2];
+              if(k2==='gfFavor'&&routeMod.acceptPenalty)adj=Math.max(0,adj-routeMod.acceptPenalty);
+              var old2=GS[k2];GS[k2]=Math.max(0,GS[k2]+adj);gfChanges[k2]=GS[k2]-old2;
+            }
+          }
+          if(routeKey==='couple'&&routeMod.specialChance&&Math.random()<routeMod.specialChance){
+            gfChanges.charm=(gfChanges.charm||0)+3;GS.charm+=3;
+            gfChanges.happiness=(gfChanges.happiness||0)+5;GS.happiness+=5;
+          }
+        }else if(idx===1){
+          var extra=routeMod.rejectExtra||0;
+          GS.breakupProb+=10+extra;
+        }
+        var changes=doEffects(eff);
+        for(var k3 in gfChanges){if(gfChanges.hasOwnProperty(k3))changes[k3]=gfChanges[k3];}
+        $('choices-area').innerHTML='';
+        var resultText=gc.result||'';
+        if(routeKey==='couple'&&gc.gfEffects&&routeMod.specialChance&&Math.random()<routeMod.specialChance){
+          resultText+='\n\n🌙 暧昧隐藏剧情触发：夜幕低垂，灯火阑珊。她悄悄靠近你，在你耳边轻声说了一句只有你们两人能听见的话。这个国庆注定难忘。';
+        }
+        if(idx===1&&GS.breakupProb>=100){
+          updatePanel();
+          showBreakupPopup(function(){updatePanel();if(callback)callback();});
+        }else if(idx===1&&GS.breakupProb>0&&Math.random()*100<GS.breakupProb){
+          updatePanel();
+          showBreakupPopup(function(){updatePanel();if(callback)callback();});
+        }else{
+          showPopup(ge.title,resultText,changes,null,function(){updatePanel();if(callback)callback();});
+        }
+      };
+    })(gc,i);
+    $('choices-area').appendChild(btn);
+  }
+}
+
+function finishHolidayDay(){
+  $('choices-area').innerHTML='';
+  var nb=document.createElement('button');nb.className='primary';nb.textContent='→ 下一天';
+  nb.onclick=function(){advanceToNextDay();};
+  $('choices-area').appendChild(nb);saveGame();
+}
+
 // ==================== 日常模式引擎 ====================
 function enterScriptedDays(){
   GS.phase='daily';GS.year=2024;GS.month=9;GS.day=8;
@@ -930,7 +1336,8 @@ function enterScriptedDays(){
 function processDay(){
   var dk=dateKey(GS.year,GS.month,GS.day);
   if(GS.day===1)applyMonthly();
-  if(GS.gfUnlocked&&GS.gfFavor>0){
+  var isHoliday=HOLIDAY_DAYS[dk]?true:false;
+  if(!isHoliday&&GS.gfUnlocked&&GS.gfFavor>0){
     GS.gfFavor=Math.max(0,GS.gfFavor-1);
     if(GS.gfFavor<30&&Math.random()<0.15){
       var gfName=GS.gfName||'女友';
@@ -940,7 +1347,9 @@ function processDay(){
     }
   }
   updatePanel();
-  if(GS.lastMealDay!==dk){
+  if(isHoliday&&GS.holidayRoute==='home'){
+    processDayContinue(dk);
+  }else if(GS.lastMealDay!==dk){
     renderMealChoice(dk,function(){processDayContinue(dk);});
   }else{
     processDayContinue(dk);
@@ -948,6 +1357,9 @@ function processDay(){
 }
 
 function processDayContinue(dk){
+  if(HOLIDAY_DAYS[dk]){
+    renderHolidayDay(dk);return;
+  }
   var sd=STORY_DAYS[dk];
   if(sd){
     GS.currentDay=dk;GS.currentPhaseIdx=0;
@@ -1235,6 +1647,7 @@ function advanceToNextDay(){
     else{GS.month++;}
     if(GS.gfUnlocked&&wasLast===dim){GS.charm+=20;}
   }else{GS.day++;}
+  if(GS.month===10&&GS.day===8&&GS.holidayRoute){GS.holidayRoute=null;}
   updatePanel();processDay();
 }
 
@@ -1403,7 +1816,8 @@ function saveGame(){
     taniaFavor:GS.taniaFavor,shijianmingFavor:GS.shijianmingFavor,zhouruiFavor:GS.zhouruiFavor,
     hanpengUnlocked:GS.hanpengUnlocked,taniaUnlocked:GS.taniaUnlocked,
     shijianmingUnlocked:GS.shijianmingUnlocked,zhouruiUnlocked:GS.zhouruiUnlocked,
-    weekendEventReduction:GS.weekendEventReduction
+    weekendEventReduction:GS.weekendEventReduction,
+    holidayRoute:GS.holidayRoute
   };
   try{localStorage.setItem('dongqin_save4',JSON.stringify(data));}catch(e){}
 }
