@@ -4,6 +4,7 @@ function weekday(y,m,d){return ['日','一','二','三','四','五','六'][new D
 function fmtDate(y,m,d){return y+'年'+m+'月'+d+'日';}
 function dateKey(y,m,d){return y+'-'+String(m).padStart(2,'0')+'-'+String(d).padStart(2,'0');}
 function isWeekend(y,m,d){var w=new Date(y,m-1,d).getDay();return w===0||w===6;}
+function isWeekday(y,m,d){return !isWeekend(y,m,d);}
 function daysInMonth(y,m){if(m===2)return(y%4===0&&(y%100!==0||y%400===0))?29:28;return [31,28,31,30,31,30,31,31,30,31,30,31][m-1];}
 
 var ATTR={health:'健康',happiness:'幸福',wisdom:'悟性',charm:'魅力',glory:'荣耀',money:'金钱',singing:'歌唱能力',pengyuanBalance:'鹏远余额',gfFavor:'好感度',hanpengHaoGan:'韩鹏好感',teacherFavor:'教师好感',classmateFavor:'同学好感',taniaFavor:'Tania好感',shijianmingFavor:'史鉴明好感',zhouruiFavor:'周蕊好感',hanjieFavor:'韩杰好感',cherryFavor:'Cherry好感',liguoruiFavor:'李国瑞好感',songjunliFavor:'宋俊丽好感'};
@@ -19,6 +20,45 @@ var HOLIDAY_ROUTES={
   internship:{name:'前往鸟爷控股短期实习',dailyEffects:{money:100,health:-10},skipMeal:false,gfMod:{rejectExtra:5}},
   dorm:{name:'宿舍摆烂躺平',dailyEffects:{health:10,happiness:14,wisdom:-12},skipMeal:false,gfMod:{acceptPenalty:2}}
 };
+
+// ===== 天气系统 =====
+var WEATHER_TYPES={
+  sunny:{name:'晴天',icon:'☀️',desc:'阳光明媚，天光透亮，校园光线充足，气温舒适。',effects:{health:2,happiness:1},prob:0.28,seasons:'all'},
+  cloudy:{name:'多云',icon:'⛅',desc:'云朵零散分布，阳光时隐时现，体感平和。',effects:{},prob:0.25,seasons:'all'},
+  overcast:{name:'阴天',icon:'☁️',desc:'天空被乌云遮盖，光线昏暗，氛围沉闷。',effects:{happiness:-2},prob:0.18,seasons:'all'},
+  fog:{name:'大雾',icon:'🌫️',desc:'浓雾笼罩校园，能见度降低，空气潮湿微凉。',effects:{wisdom:-1,health:-1},prob:0.08,seasons:'all'},
+  rain:{name:'雨',icon:'🌧️',desc:'细雨连绵，地面潮湿，出行需撑伞，户外行动不便。',effects:{health:-1,wisdom:1},prob:0.12,seasons:'warm',sleepBonus:true},
+  thunderstorm:{name:'雷雨',icon:'⛈️',desc:'乌云压顶，雷声阵阵，雨势急促，户外闷热压抑。',effects:{happiness:-2,wisdom:2},prob:0.09,seasons:'warm',sleepBonus:true},
+  snow:{name:'雪',icon:'❄️',desc:'雪花飘落，地面覆上薄雪，气温走低，寒风相伴。',effects:{health:-1,happiness:1},prob:0.12,seasons:'cold',sleepBonus:true},
+  blizzard:{name:'暴雪',icon:'🌨️',desc:'大雪纷飞，视野受阻，户外严寒刺骨，出行困难。',effects:{health:-3,happiness:-2},prob:0.09,seasons:'cold',sleepBonus:true}
+};
+
+function pickDailyWeather(){
+  var m=GS.month;var season=(m>=4&&m<=10)?'warm':'cold';
+  var pool=[];var totalProb=0;
+  for(var wk in WEATHER_TYPES){
+    if(!WEATHER_TYPES.hasOwnProperty(wk))continue;
+    var wt=WEATHER_TYPES[wk];
+    if(wt.seasons==='all'||wt.seasons===season){pool.push({key:wk,type:wt,prob:wt.prob});totalProb+=wt.prob;}
+  }
+  var roll=Math.random()*totalProb;var cum=0;
+  for(var i=0;i<pool.length;i++){cum+=pool[i].prob;if(roll<cum)return{key:pool[i].key,name:pool[i].type.name,icon:pool[i].type.icon,desc:pool[i].type.desc,effects:pool[i].type.effects,sleepBonus:!!pool[i].type.sleepBonus};}
+  return{key:'sunny',name:'晴天',icon:'☀️',desc:WEATHER_TYPES.sunny.desc,effects:WEATHER_TYPES.sunny.effects,sleepBonus:false};
+}
+
+function getWeatherSleepBonus(){
+  if(GS.weather&&GS.weather.sleepBonus)return{happiness:3};
+  return{};
+}
+function getWeatherSleepNarrative(){
+  if(!GS.weather||!GS.weather.sleepBonus)return'';
+  var k=GS.weather.key;
+  if(k==='rain')return'窗外细雨绵绵，雨声簌簌伴你入眠。被窝里的暖意与雨天的静谧交织，这一觉睡得格外香甜。';
+  if(k==='thunderstorm')return'窗外雷声隐隐、雨势急促，屋里却格外温暖安全。伴着雷雨声沉入梦乡，睡得分外踏实。';
+  if(k==='snow')return'窗外雪花静静飘落，宿舍里暖意融融。雪天的被窝仿佛有魔力，让人睡得特别沉、特别香。';
+  if(k==='blizzard')return'窗外暴雪呼啸，屋里暖气十足。这种天气窝在被子里睡觉简直是人间至福，幸福感在心中弥漫。';
+  return'';
+}
 
 // ===== 游戏状态 =====
 var GS;
@@ -47,7 +87,13 @@ function defaultState(){
     holidayRoute:null,
     hanjieFavor:80,cherryFavor:80,liguoruiFavor:80,songjunliFavor:80,
     hanjieUnlocked:false,cherryUnlocked:false,liguoruiUnlocked:false,songjunliUnlocked:false,
-    acmRegistered:false,lastBonusDay:''
+    acmRegistered:false,lastBonusDay:'',weather:null,
+    putonghuaRegistered:false,zhuchirenRegistered:false,
+    stocksUnlocked:false,
+    holdings:{niaoye:{shares:0,costBasis:0},benben:{shares:0,costBasis:0},bobi:{shares:0,costBasis:0}},
+    stockPrices:{niaoye:18,benben:12,bobi:8},
+    lastStockDay:'',stockPrevPrices:{niaoye:18,benben:12,bobi:8},
+    zaocaoExempt:false
   };
 }
 
@@ -95,6 +141,7 @@ function updatePanel(){
   if(GS.clubType)b.push('📋已报社团:'+GS.clubType);
   if(GS.gfUnlocked)b.push('💕恋爱中');
   if(GS.weekendEventReduction>0)b.push('🗳️周末事件-'+GS.weekendEventReduction);
+  if(GS.weather)b.push(GS.weather.icon+' '+GS.weather.name+(GS.weather.sleepBonus?' 💤+3':''));
   $('buff-row').innerHTML=b.map(function(x){return'<span>'+x+'</span>';}).join('');
 }
 
@@ -131,7 +178,7 @@ function setPhase(p){
 }
 
 function renderBottomBar(){
-  $('bottom-bar').innerHTML='<button onclick="exportSave()">📤 导出</button><button onclick="importSave()">📥 导入</button><button onclick="openSupermarket()">🏪 利生超市</button><button onclick="showGrades()">📊 成绩</button><button onclick="showTeacherFavors()">👨‍🏫 教师好感</button><button onclick="resetToTitle()">🏠 标题</button>';
+  $('bottom-bar').innerHTML='<button onclick="exportSave()">📤 导出</button><button onclick="importSave()">📥 导入</button><button onclick="openSupermarket()">🏪 利生超市</button><button onclick="openStocks()">📈 金融理财</button><button onclick="showGrades()">📊 成绩</button><button onclick="showTeacherFavors()">👨‍🏫 教师好感</button><button onclick="resetToTitle()">🏠 标题</button>';
 }
 
 // ===== 利生超市 =====
@@ -906,7 +953,7 @@ STORY_DAYS['2024-09-30']={
     makeMainPhase('课间休息','第一节课下课·自由安排',
       '第一节课结束，距离下节课还有20分钟课间。你打算如何安排这段自由时间？',
       [
-        {text:'返回宿舍补觉休息',effects:{health:7},
+        {text:'返回宿舍补觉休息',effects:{health:7},sleepBonus:true,
          result:'你回到宿舍，一头倒在床上。20分钟的短暂小憩让你恢复了精力，醒来后精神焕发地走向下一间教室。'},
         {text:'回宿舍打开游戏放松',effects:{happiness:8},
          result:'你打开手机游戏打了两局。虽然时间不长，但游戏带来的快乐实实在在地驱散了早起的困意。'},
@@ -1229,7 +1276,7 @@ STORY_DAYS['2024-10-08']={
       [
         {text:'坚持上课，认真听讲做笔记',effects:{wisdom:8},
          hidden:{flags:{_attendedMath:true}},result:'你端正坐姿，跟着周蕊老师的节奏一步步推导行列式的计算过程。周老师的讲解清晰透彻，你感觉线性代数也没那么可怕。'},
-        {text:'趁课间溜回宿舍补觉',effects:{health:7,happiness:6},
+        {text:'趁课间溜回宿舍补觉',effects:{health:7,happiness:6},sleepBonus:true,
          result:'你趁周老师转身写板书时悄悄从后门溜了出去。回到宿舍一头倒在床上——国庆假期后的早八实在太难顶了。不过被窝的温暖很快驱散了你的愧疚感。'}
       ]),
     {type:'conditional',tag:'系统',title:'雨课堂随机签到',
@@ -1257,7 +1304,7 @@ STORY_DAYS['2024-10-08']={
         {text:'准时上课，积极参与课堂互动',effects:{wisdom:7,cherryFavor:5},
          flags:{cherryUnlocked:true},hidden:{flags:{_attendedCherry:true}},
          result:'你全程认真听讲，积极参与Cherry老师的互动环节。Cherry老师对你的表现很满意，还在你的课本上画了一个小小的笑脸。\n\n📌 系统提示：Cherry 教师好感度系统已解锁。'},
-        {text:'这课没用，趁课间直接逃课',effects:{},
+        {text:'这课没用，趁课间直接逃课',effects:{},sleepBonus:true,
          hidden:{desc:'Cherry好感大幅下降，课程成绩-2',effects:{cherryFavor:-8},gEffects:{academicLang:-2}},
          flags:{cherryUnlocked:true},
          result:'你觉得学术语言课没什么用，趁Cherry转身擦白板时悄悄溜走了。但你没想到Cherry在考勤表上做了详细记录。\n\n⚠️ Cherry好感度 -8\n⚠️ 学术语言课程预估成绩 -2\n📌 系统提示：Cherry 教师好感度系统已解锁。'}
@@ -1280,7 +1327,7 @@ STORY_DAYS['2024-10-08']={
     makeMainPhase('下午课后','自由活动时间',
       '一天的课程终于全部结束。下午四点，阳光透过教学楼走廊的窗户斜斜地洒在地面上。你有几个小时的自由时间，想做什么？',
       [
-        {text:'回宿舍补觉休息',effects:{health:6},result:'你回到宿舍一头倒在床上。国庆后第一天上课实在太累了，补一觉比什么都强。'},
+        {text:'回宿舍补觉休息',effects:{health:6},sleepBonus:true,result:'你回到宿舍一头倒在床上。国庆后第一天上课实在太累了，补一觉比什么都强。'},
         {text:'打开电脑打游戏放松',effects:{happiness:7},result:'你打开电脑，登录游戏，戴上耳机。几局下来，开学第一天的疲惫在虚拟世界中烟消云散。'},
         {text:'去教室安静自习',effects:{wisdom:5},result:'你来到教学楼找了一间空教室，翻开课本安安静静地学了两个小时。假期的浮躁在书页翻动间慢慢沉淀下来。'},
         {text:'前往大创中心拜访韩鹏老师',effects:{},
@@ -1307,7 +1354,7 @@ STORY_DAYS['2024-10-09']={
       [
         {text:'认真听讲，跟着老师的节奏做笔记',effects:{shijianmingFavor:5},
          hidden:{flags:{_attendedData:true}},result:'你翻开笔记本，跟着史老师的PPT一页页记录重点。数据分析这门课比想象中实用，很多案例都来自真实的商业场景。'},
-        {text:'这节课没意思，趁课间直接逃课',effects:{health:6,happiness:5},
+        {text:'这节课没意思，趁课间直接逃课',effects:{health:6,happiness:5},sleepBonus:true,
          result:'你觉得这课太水了，趁史老师低头翻PPT时悄悄从后门溜了出去。回到宿舍躺在熟悉的床上，你长长地舒了一口气。'}
       ]),
     {type:'conditional',tag:'系统',title:'课堂纸条随机抽查',
@@ -1329,7 +1376,7 @@ STORY_DAYS['2024-10-09']={
     makeMainPhase('上午课后','自由活动时间',
       '上午的课结束了，距离下午第一节体育课还有两个多小时。你打算怎么安排这段时间？',
       [
-        {text:'回宿舍补觉休息',effects:{health:6},result:'你回到宿舍一头倒在床上，利用午休时间美美地补了一觉。'},
+        {text:'回宿舍补觉休息',effects:{health:6},sleepBonus:true,result:'你回到宿舍一头倒在床上，利用午休时间美美地补了一觉。'},
         {text:'打开电脑打游戏放松',effects:{happiness:7},result:'你打开电脑打了几局游戏。虽然队友有点坑，但放松的效果拉满了。'},
         {text:'去教室安静自习',effects:{wisdom:5},result:'你来到教学楼找了一间空教室，趁着午后的安静时光预习了下午的课程。'},
         {text:'前往大创中心拜访韩鹏老师',effects:{},
@@ -1351,7 +1398,7 @@ STORY_DAYS['2024-10-09']={
       [
         {text:'认真上课，参与课堂互动',effects:{taniaFavor:5},hidden:{flags:{_attendedTania:true}},
          result:'你端正坐好准备认真听课。Tania老师对全班同学的出勤情况很满意，开始用生动的PPT讲解今天的课程内容。'},
-        {text:'逃课回宿舍休息',effects:{health:5,happiness:4},
+        {text:'逃课回宿舍休息',effects:{health:5,happiness:4},sleepBonus:true,
          result:'你觉得英语课没什么压力，趁课间溜回了宿舍。躺在床上刷刷手机、看看视频，惬意无比。'}
       ]),
     {type:'main',tag:'课堂',title:'Tania的分享环节',
@@ -1427,7 +1474,7 @@ STORY_DAYS['2024-10-10']={
       [
         {text:'准时前往教室上课',effects:{wisdom:6,cherryFavor:5},
          hidden:{flags:{_attendedCherry10:true}},result:'你按时抵达座位，配合老师的课堂节奏跟读单词、参与互动。Cherry老师看到全班出勤率不错，心情很好地多讲了几个有趣的词根故事。'},
-        {text:'抵挡不住倦意，逃课留在宿舍',effects:{cherryFavor:-7},
+        {text:'抵挡不住倦意，逃课留在宿舍',effects:{cherryFavor:-7},sleepBonus:true,
          hidden:{desc:'学术语言课程成绩-2',gEffects:{academicLang:-2}},
          result:'困意战胜了理智。你放弃本节课缩回被窝，考勤系统自动记录缺勤记录。下次见到Cherry老师恐怕要绕着走了。\n\n⚠️ Cherry好感 -7\n⚠️ 学术语言课程预估成绩 -2'}
       ]),
@@ -1456,7 +1503,7 @@ STORY_DAYS['2024-10-10']={
       [
         {text:'强打精神，坚持留在教室听课',effects:{wisdom:7},
          hidden:{flags:{_attendedMath10:true}},result:'你用冷水洗了把脸，重新坐回座位。周蕊老师今天讲的矩阵运算虽然复杂，但逻辑清晰。你跟着一步步推导，渐渐忘记了困意。'},
-        {text:'索性放下课业，逃课回宿舍睡大觉',effects:{happiness:6,health:7},
+        {text:'索性放下课业，逃课回宿舍睡大觉',effects:{happiness:6,health:7},sleepBonus:true,
          result:'你实在扛不住困意，收拾书包悄悄从后门溜了。回到宿舍一头倒在床上——午后补觉的滋味，比任何咖啡都管用。'}
       ]),
     // Phase 7: 雨课堂 trigger
@@ -1485,7 +1532,7 @@ STORY_DAYS['2024-10-10']={
     {type:'main',tag:'自由活动',title:'下午自由时光',
      text:'下午第一节课结束后，今日白天课程全部结束。校园里的氛围变得轻松起来，阳光透过树叶洒在主干道上，微凉的秋风拂过脸颊。\n\n你拥有整块自由时间，打算如何安排这段时光？',
      choices:[
-       {text:'回宿舍睡觉，缓解全天上课的疲惫',effects:{health:6},result:'你回到宿舍一头倒在床上，闭上眼睛让自己彻底放松。今天课程排得确实紧凑，补一觉比什么都强。'},
+       {text:'回宿舍睡觉，缓解全天上课的疲惫',effects:{health:6},sleepBonus:true,result:'你回到宿舍一头倒在床上，闭上眼睛让自己彻底放松。今天课程排得确实紧凑，补一觉比什么都强。'},
        {text:'回宿舍打游戏，抛开课业压力',effects:{happiness:7},result:'你打开电脑，戴上耳机。几局游戏下来，今天所有上课的疲劳都在虚拟世界中烟消云散。'},
        {text:'留在教室学习，梳理今日各科知识点',effects:{wisdom:5},result:'你翻开笔记本，把今天各科的重点内容逐一复盘整理。看着满满当当的笔记，心里莫名有种踏实感。'},
        {text:'前往大创中心，和韩鹏老师交流项目进度',effects:{},
@@ -1533,6 +1580,233 @@ STORY_DAYS['2024-10-10']={
     '你们并肩坐在宿舍楼下的长椅上。夜晚的校园格外安静，路灯昏黄的光洒在地面上。她聊着今天上课时发生的趣事，你讲着合唱训练时的混乱场面。秋夜微凉，但彼此的陪伴让心里格外温暖。',
     '接过水说了声谢谢就匆匆上楼了',{happiness:-4},
     '"嗯……晚安。"苏小暖站在原地，看着你头也不回地走进了宿舍楼。她低头看了看手中剩下的一瓶水——那是她给自己买的。在楼下站了一会儿，她才转身慢慢走回了自己的宿舍。')
+};
+
+STORY_DAYS['2024-10-11']={
+  title:'开学第五天·普通话报名+晨曦杯+合唱彩排',
+  phases:[
+    // Phase 1: Tania 学术语言中级 上课/逃课
+    makeMainPhase('上午课程①','学术语言交流与沟通（中级）· 任课教师：Tania',
+      '早八课堂准时开始，Tania老师依旧温柔亲和地走进教室，手里端着一杯热拿铁。秋日的晨光透过窗帘洒在讲台上，课堂氛围轻松惬意。\n\nTania打开PPT，微笑着用英文向全班问好："Good morning everyone! Today we\'ll continue with our speaking practice——and I have something fun planned." 她顿了顿，目光扫过全班，"国庆假期刚过不久，我们来聊聊你们的假期生活。"',
+      [
+        {text:'前往教室上课，积极参与课堂互动',effects:{wisdom:7,taniaFavor:5},
+         hidden:{flags:{_attendedTania11:true}},
+         result:'你准时抵达教室入座，跟着Tania的课堂节奏一步步进行口语练习。Tania的讲课风格一如既往地轻松自然，你在互动环节主动用英文回答了几个问题，Tania对你的课堂表现很满意。'},
+        {text:'贪恋温暖被窝，逃课在宿舍睡大觉',effects:{health:6,happiness:5},sleepBonus:true,
+         result:'秋日早晨的被窝实在太有诱惑力了。你翻了个身，把被子裹得更紧了些——Tania的课虽然有趣，但早八的困意战胜了一切。你在宿舍安稳地补了一整个早上的觉。'}
+      ]),
+    // Phase 2: Tania 分享环节
+    {type:'main',tag:'课堂互动',title:'Tania邀请你上台分享国庆生活',
+     condSkip:function(){return !GS._attendedTania11;},
+     text:'课堂互动环节进行到一半，Tania老师笑盈盈地走到讲台中央，随机点名——她的目光恰好落在了你身上。\n\n"How about you? Would you like to come up and share something about your National Day holiday? Just a few sentences——don\'t worry about being perfect!"\n\n全班同学的目光齐刷刷地转向你。Tania的眼神里满是鼓励和期待。',
+     choices:[
+       {text:'大方上台，用英文分享国庆假期经历',effects:{charm:-3,wisdom:6},
+        result:'你深吸一口气，大方地走上讲台。虽然英文表达有些磕磕绊绊，有些单词还需要Tania帮忙补充，但你真诚的分享和毫不怯场的态度赢得了全班的掌声。Tania老师笑着说："Excellent! That took real courage——your speaking is improving every week!"'},
+       {text:'腼腆摇头拒绝，不愿当众展示自己',effects:{taniaFavor:-5},
+        result:'你腼腆地摇了摇头，小声说了句"Sorry, I\'m not ready." Tania老师表示理解，微笑着转向了另一位举手的同学。但你注意到她在花名册上你的名字旁边轻轻画了一个小小的记号——课堂积极性这一栏，今天恐怕要扣分了。'}
+     ]},
+    // Phase 3: Hugo趣事 trigger
+    {type:'conditional',tag:'课堂趣事',title:'Tania分享Hugo老师日常趣事',
+     condCustom:function(){return true;},prob:0.8,
+     text_applied:'课堂闲聊放松环节到了。Tania老师突然笑出声来，拍了拍手示意全班安静："Okay, I have to tell you guys something funny——关于Hugo老师的！"\n\n全班同学顿时来了精神，大家都知道Tania老师家的金毛犬Hugo，也听说过Hugo老师的各种搞笑传闻。',
+     sText:'Tania开始绘声绘色地讲起Hugo老师最近的糗事，全班笑成一团。',sFlags:{_hugoTriggered11:true},
+     fText:'Tania老师看了看时间，决定今天不讲闲话了——课程进度有点紧，她直接切回了正课内容。'},
+    // Phase 4: Hugo趣事 choice
+    {type:'main',tag:'课堂趣事',title:'Tania的欢乐分享',
+     condSkip:function(){return !GS._hugoTriggered11||!GS._attendedTania11;},
+     text:'Tania老师讲得眉飞色舞，模仿Hugo老师的语调和动作，把全班逗得前仰后合。她注意到你也在笑着听，便冲你眨了眨眼："See? Teachers have funny lives too!"\n\n不过说实话，听老师闲聊虽然开心，但确实有点耽误课堂进度——你瞥了一眼黑板上还只写了一半的板书。',
+     choices:[
+       {text:'放下笔专注倾听，享受难得的轻松时刻',effects:{taniaFavor:4,wisdom:-3},
+        result:'你索性合上课本，专心听Tania分享。教室里笑声不断，师生之间的距离在欢声笑语中拉近了不少。不过等Tania终于讲完回到正课时，你发现黑板上已经写满了新的知识点——刚才走神的那几分钟，可能需要课后花时间补回来了。'},
+       {text:'低头翻看课本，不予倾听，抓紧时间自学',effects:{taniaFavor:-4,happiness:5},
+        result:'你低下头，把注意力转回课本上。Tania注意到了你的冷淡反应，脸上闪过一丝失落，但她没有说什么，只是继续和其他认真听的同学互动。你利用这段时间多看了几页课本内容，心情莫名地轻松自在——偶尔做一次"不合群"的人，其实也挺舒服的。'}
+     ]},
+    // Phase 5: 自由活动五选一
+    {type:'main',tag:'自由活动',title:'上午自由时光',
+     text:'上午第一节课结束，第二节没有排课，整个上午后半段完全自由。秋日阳光透过教学楼走廊的窗户斜斜地洒在地面上，校园里的银杏叶开始泛黄，微凉的秋风裹挟着桂花的香气。\n\n你站在教学楼门口伸了个懒腰，打算如何安排这段自由时光？',
+     choices:[
+       {text:'回宿舍睡觉，享受秋日上午的慵懒',effects:{health:6},sleepBonus:true,
+        result:'你回到宿舍一头倒在床上。上午没课的日子，补觉是性价比最高的选择——闭上眼睛，整个人陷在柔软的被子里，秋日凉爽的微风从半开的窗户吹进来，惬意至极。'},
+       {text:'回宿舍打游戏，放松紧绷的神经',effects:{happiness:7},
+        result:'你打开电脑，登录游戏，戴上耳机。几局下来，早八的疲惫和课堂的紧张在虚拟世界中烟消云散。虽然室友推门进来时投来了"又在打游戏"的眼神，但你毫不在意。'},
+       {text:'留在教室安静学习，梳理今日课程',effects:{wisdom:5},
+        result:'你找了一间没人的空教室，翻开笔记本把Tania课上讲的重点词汇和句型重新整理了一遍。安静的教室里只有笔尖划过纸面的沙沙声，专注的时光总是过得特别快。'},
+       {text:'前往大创中心拜访韩鹏老师',effects:{},
+        cond:true,condAttr:'keChuangUnlocked',condTh:1,
+        sEffects:{hanpengHaoGan:6},sText:'你来到大创中心，韩鹏老师正在调试一台新到的3D打印机。看到你来，他热情地招手让你过去帮忙。你们一边调试设备一边聊着最近的科创比赛动向，韩老师还分享了不少实用的项目经验。一个上午的交流让你收获颇丰。',
+        fText:'你来到大创中心门口，发现门锁着，里面空无一人。韩鹏老师今天可能外出开会了。也许下午再来看看？',
+        result:'你来到大创中心门口，发现门锁着，里面空无一人。'},
+       {text:'约女友出来，在校园里漫步闲逛',effects:{},
+        cond:true,condAttr:'gfUnlocked',condTh:1,
+        sEffects:{gfFavor:8},sText:'你给女友发了条消息，两人约在图书馆门口碰头。秋日的校园美得像一幅油画——银杏叶铺满小径，桂花香飘满空气。你们并肩走了很久，聊着这周的课、吐槽着早八的困、分享着各自遇到的趣事。她说这样的时光是忙碌学业里最好的充电方式。',
+        fText:'你翻出手机通讯录——才想起来，你现在还是单身，哪来的女友？也许以后会有机会的。',
+        result:'你翻出手机通讯录——才想起来，你现在还是单身。'}
+     ]},
+    // Phase 6: 普通话考试报名
+    {type:'main',tag:'📢 通知',title:'全国普通话水平测试·校内统一报名',
+     text:'班级群突然弹出一条官方通知，辅导员张银雪老师@了全体成员：\n\n📢 全国普通话水平测试（PSC）校内统一报名通道已开启！\n📅 考试时间：11月中旬（具体日期另行通知）\n💰 报名费用：25元/人\n📝 报名截止：10月18日17:00前\n⚠️ 逾期不予补报，请同学们相互转告！\n\n普通话水平等级证书是教师资格认定、公务员考试等重要环节的必备材料。你仔细看了看通知，考虑要不要趁这次统一报名的机会先把名报了。',
+     choices:[
+       {text:'果断报名，缴纳考试费用',effects:{money:-25},flags:{putonghuaRegistered:true},
+        result:'你扫码支付了25元报名费，在群在线表格里填上了自己的名字。虽然还不确定普通话考试到底有多难，但多一张证书总没有坏处——何况25元的价格比外面自己报名还便宜了一些。\n\n📌 系统提示：普通话考试已报名，后续将解锁相关考核剧情。'},
+       {text:'暂时不报名，以后再说',effects:{},
+        result:'你想了想，觉得现在报名还太早——离截止日期还有一周呢，不急。你把通知截图存了下来，打算过几天再决定。'}
+     ]},
+    // Phase 7: 晨曦杯主持人大赛报名
+    {type:'main',tag:'🎤 通知',title:'第二届"晨曦杯"主持人大赛·院内选拔',
+     text:'普通话报名的事刚放下，又一条消息弹了出来——这次是学生会宣传部发的，排版花里胡哨、感叹号拉满：\n\n🎤百年征程自强不息，凝心聚力再创辉煌——第二届"晨曦杯"主持人大赛震撼来袭！！\n☀️一支话筒，便可挥斥方遒！\n让热爱绽放，让梦想启航！\n灯光已就位，舞台已搭好！\n快来秀出你的"十八般武艺"，\n我们期待才华横溢的你！✨\n【比赛奖励】：魅力加成与荣耀奖励\n⚠️活动现阶段为院内主持人选拔赛\n想要了解更多，请加入选拔赛群（870158441）\n具体赛制和时间将在群里通知( ⌯\' \'⌯)📣\n\n🌱风劲好扬帆，奋进正当时！机不可失，失不再来，快来成为万众瞩目的主角，在舞台上施展你那无穷的魅力与才华吧！',
+     choices:[
+       {text:'热血沸腾，果断报名参赛！',effects:{},flags:{zhuchirenRegistered:true},
+        cond:true,condAttr:'singing',condTh:101,
+        sEffects:{charm:10,glory:10},
+        sText:'你毫不犹豫地填了报名表。站在镜子前试了一段即兴主持——声音洪亮、台风稳健、表情自然，连路过的室友都忍不住给你鼓掌。以你目前的歌唱与舞台功底，这次院内选拔简直是为你量身定做的舞台。\n\n✨ 歌唱能力>100，舞台表现力出众！魅力+10，荣耀+10',
+        fEffects:{charm:-5,glory:-2},
+        fText:'你怀着满腔热血填了报名表。然而站在镜子前试着练了一段开场白后，你发现自己的声音有些发颤、手势也不太自然……舞台这条路，似乎比想象中要难走不少。但不管怎样，迈出第一步总是好的。\n\n😥 歌唱能力≤100，初次登台表现青涩。魅力-5，荣耀-2'
+       },
+       {text:'有自知之明，放弃报名',effects:{},
+        result:'你仔细想了想——主持人在聚光灯下被全校师生盯着看，万一忘词了岂不是社死现场？你默默关掉了通知，决定把舞台留给更有勇气的人。'}
+     ]},
+    // Phase 8: 史鉴明 数据分析 上课/逃课
+    makeMainPhase('下午课程①','智能数据分析导论 · 任课教师：史鉴明',
+      '午休过后，下午第一节是史鉴明老师的智能数据分析导论课。午后的困意如潮水般涌来，你在去教室和回宿舍之间做着艰难的思想斗争。\n\n史鉴明老师是出了名的课堂纪律严格——每节课都会布置随堂纸条作业，计入平时成绩，缺勤等同于双重扣分。但同时，他的课确实干货满满，对数据分析思维的培养非常有帮助。',
+      [
+        {text:'坚持前往教室上课，遵守课堂纪律',effects:{shijianmingFavor:5},
+         hidden:{flags:{_attendedData11:true}},
+         result:'你用冷水洗了把脸，强撑着精神走进了教室。史鉴明老师已经在讲台上调试PPT了——还好你来了，他的目光在教室里扫了一圈，在你的座位方向停留了一秒，微微点了点头。'},
+        {text:'抵挡不住午后困意，逃课回宿舍睡觉',effects:{health:6,happiness:5},sleepBonus:true,
+         result:'困意最终战胜了理智。你转身朝宿舍楼走去，一头倒在床上——午后的阳光透过窗帘洒在被子上，暖洋洋的。史鉴明老师的课？下次一定认真上……下次一定。'}
+      ]),
+    // Phase 9: 纸条 trigger
+    {type:'conditional',tag:'课堂测验',title:'史鉴明老师发起随堂纸条答题',
+     condCustom:function(){return true;},prob:0.8,
+     text_applied:'课程进行到一半，史鉴明老师突然停下PPT，从公文包里拿出一叠空白纸条："每位同学在纸条上写下你对大数据的理解——不少于50字，署名后下课前上交。计入平时成绩，未交者按缺作业处理。"\n\n教室里顿时响起一片翻书声和窃窃私语。',
+     sText:'史老师开始逐一查看上交的纸条——这次纸条作业要被记录了。',sFlags:{_paperTriggered11:true},
+     fText:'今天史老师似乎心情不错，临时决定取消纸条作业。他摆了摆手："今天讲的内容比较多，纸条作业下次再说。"你松了一口气。'},
+    // Phase 10: 纸条 choice
+    {type:'main',tag:'课堂测验',title:'纸条作业——你对大数据的理解',
+     condSkip:function(){return !GS._paperTriggered11||!GS._attendedData11;},
+     text:'史鉴明老师走到了你的座位旁边，低头看了看你的桌面："你的纸条呢？"\n\n周围同学都埋着头奋笔疾书，你能感觉到史老师的目光正等待你的回应。',
+     choices:[
+       {text:'认真完成课堂习题，按时上交答题纸条',effects:{shijianmingFavor:4},
+        result:'你迅速组织语言，在纸条上工整地写下了自己对大数据的理解——从数据采集到分析应用，把课上讲的知识点和自己的思考都写了进去。史老师接过纸条扫了一眼，微微点头，在你的名字旁边打了一个勾。"不错，有自己的见解。"'},
+       {text:'偷懒敷衍，拒绝上交答题纸条',effects:{},
+        hidden:{desc:'数据分析课程成绩-10',gEffects:{dataAnalysis:-10}},
+        result:'你随口说了句"忘了写"。史老师没有多说什么，但在他转身离开时，你清楚地看到他在花名册上你的名字旁边画了一个叉。\n\n⚠️ 智能数据分析导论 预估成绩 -10'}
+     ]},
+    // Phase 11: 纸条缺席记录
+    {type:'auto',tag:'系统',title:'纸条作业·缺交记录',
+     condSkip:function(){return !GS._paperTriggered11||GS._attendedData11;},
+     text:'史鉴明老师收齐纸条后核对了一遍花名册——你既不在教室，也没有交纸条。缺勤加缺作业，双重记录同步至教师后台。\n\n班级群里助教发了通知："今日未交纸条的同学平时成绩扣除10分。"你看着群消息，心里有些后悔。',
+     effects:{},gEffects:{dataAnalysis:-10}},
+    // Phase 12: 周蕊 高数 上课/逃课
+    makeMainPhase('下午课程②','高等数学建模A · 任课教师：周蕊',
+      '下午最后一节文化课，周蕊老师抱着一摞厚厚的教案走进教室。黑板上很快写满了线性代数的公式推导和矩阵运算习题——今天继续深入讲解行列式与矩阵的核心考点，公式一个比一个长，推导一步比一步繁复。\n\n午后疲惫感被满黑板的数学符号放大了十倍。你在听课和逃课之间反复横跳，内心天人交战。',
+      [
+        {text:'强撑精神坚持去教室听课',effects:{wisdom:7},
+         hidden:{flags:{_attendedMath11:true}},
+         result:'你咬紧牙关坐在教室里，跟着周蕊老师的板书一步步推导。虽然困得眼睛都快睁不开了，但周老师清晰的讲解让你硬是跟上了节奏。线性代数这东西，一旦理解了逻辑，其实也没那么可怕——至少今天的笔记记了满满三页。'},
+        {text:'直接逃课回宿舍，逃避枯燥的数学课',effects:{happiness:6,health:7},sleepBonus:true,
+         result:'你实在受不了了。趁周老师转身擦黑板时，你悄悄从后门溜了出去。回到宿舍一头倒在床上——远离了矩阵和行列式的世界，整个人都轻松了。至于周蕊老师会不会发现……这个问题留到明天再想吧。'}
+      ]),
+    // Phase 13: 雨课堂 trigger
+    {type:'conditional',tag:'系统',title:'雨课堂随机签到',
+     condCustom:function(){return true;},prob:0.5,
+     text_applied:'课讲到一半，周蕊老师突然停下板书，打开了雨课堂系统。投影屏上弹出签到二维码，周老师推了推眼镜："扫码签到——今天系统会随机抽取一道课堂练习题，检验大家对刚才所讲内容的掌握程度。"',
+     sText:'手机弹出雨课堂答题界面——随堂测验来了！',sFlags:{_signinTriggered11:true},
+     fText:'雨课堂系统启动了，但今天运气不错——随机抽查没有抽到你们班。周蕊老师正常授课到下课。'},
+    // Phase 14: 雨课堂 quiz (三阶单位矩阵)
+    {type:'main',tag:'雨课堂',title:'雨课堂随堂测验',
+     condSkip:function(){return !GS._signinTriggered11||!GS._attendedMath11;},
+     text:'雨课堂系统弹出一道线性代数随堂练习题：\n\n已知三阶单位矩阵，其主对角线元素分别为？\n\nA. 1  1  1\nB. 0  0  0\nC. 1  0  0\nD. 0  1  0\n\n请选择你的答案：',
+     quizCorrectIndex:0,
+     choices:[
+       {text:'A. 1  1  1',effects:{},correctEffects:{wisdom:5},correctResult:'回答正确！单位矩阵的主对角线元素全为1，其余位置全为0。三阶单位矩阵主对角线元素为1、1、1。周蕊老师对你微笑点头。悟性+5。',wrongResult:'回答错误。单位矩阵的定义是主对角线元素全为1、其余位置全为0。三阶单位矩阵的主对角线元素为1、1、1，正确答案是A。本题无惩罚。'},
+       {text:'B. 0  0  0',effects:{},wrongResult:'回答错误。主对角线元素全为0的矩阵是零矩阵，不是单位矩阵。单位矩阵的主对角线元素全为1。正确答案是A。'},
+       {text:'C. 1  0  0',effects:{},wrongResult:'回答错误。三阶矩阵主对角线有三个位置，分别是第1行第1列、第2行第2列、第3行第3列，三个元素都是1。正确答案是A。'},
+       {text:'D. 0  1  0',effects:{},wrongResult:'回答错误。单位矩阵的每一个主对角线元素都是1，不存在0。三阶单位矩阵主对角线为1、1、1。正确答案是A。'}
+     ]},
+    // Phase 15: 雨课堂缺席
+    {type:'auto',tag:'系统',title:'雨课堂签到·缺勤记录',
+     condSkip:function(){return !GS._signinTriggered11||GS._attendedMath11;},
+     text:'你正在宿舍休息，手机弹出雨课堂签到答题提醒——但你已经逃课了！缺勤、未完成随堂练习的记录同步至教师后台。\n\n班级群里助教发了群公告："今日雨课堂未签到同学请注意，缺勤记录已备案。"周蕊老师对你的出勤表现进行了标记。',
+     effects:{glory:-5,zhouruiFavor:-6},gEffects:{advancedMath:-5}},
+    // Phase 16: 合唱训练通知
+    {type:'auto',tag:'📢 通知',title:'10.11合唱训练安排',
+     text:'晚间时分，合唱团负责人发来今晚的正式训练通知：\n\n🌟10.11合唱安排🌟\n🔺集合时间：18:30\n🔺集合地点：科技楼正门内东侧\n集体紧密大队形，辛苦合唱负责人帮忙组织一下～\n🔺如需请假请于17:00前联系辅导员老师说明缘由，经同意后，请将请假记录发给纪检部负责人（878914510），截至17:30。\n\n🔴训练安排：学校彩排！！\n1.进行两次彩排，现场听从安排\n2.彩排空闲时间温习动作，完善细节\n\n🔴注意事项：\n1.彩排现场候场时保持安静\n2.举旗动作规范（可查看先前发布的图片/视频温习）\n\n⚠️渐入秋冬，天气愈加寒凉，夜晚更甚！！！请大家一定注意多添衣物以及秋冬外套！！！\n\n你看着手机上这条通知，默默裹紧了外套——十月的秦皇岛，晚上的风确实越来越硬了。',
+     effects:{}},
+    // Phase 17a: 文艺部冲突 - 文艺部成员
+    {type:'auto',tag:'冲突事件',title:'文艺部学姐粗暴抢夺新生帽子',
+     condSkip:function(){return GS.clubType!=='文艺部';},
+     text:'全员在科技楼门口列队等待合唱彩排，现场人声嘈杂、秩序混乱。突然，人群中传来一阵骚动——一名文艺部学姐态度蛮横地走到一个新生面前，二话不说直接伸手抓向新生头上的帽子，动作粗暴无礼，新生被推得踉跄了一步。\n\n"你这帽子不符合合唱服装要求，给我摘下来！"学姐的声音又尖又响，周围所有同学都皱起了眉头。\n\n身为文艺部内部成员，你感到周围的同学纷纷向你投来不满的目光——部门人员的恶劣行为牵连到了你的个人声望。虽然你什么都没做，但"文艺部的人欺负新生"这句话已经在人群中传开了。',
+     effects:{glory:-10},
+     setFlags:{}},
+    // Phase 17b: 文艺部冲突 - 非文艺部成员
+    {type:'main',tag:'冲突事件',title:'文艺部学姐粗暴抢夺新生帽子',
+     condSkip:function(){return GS.clubType==='文艺部';},
+     text:'全员在科技楼门口列队等待合唱彩排，现场人声嘈杂、秩序混乱。突然，人群中传来一阵骚动——一名文艺部学姐态度蛮横地走到一个新生面前，二话不说直接伸手抓向新生头上的帽子，动作粗暴无礼，新生被推得踉跄了一步。\n\n"你这帽子不符合合唱服装要求，给我摘下来！"学姐的声音又尖又响。周围的同学面面相觑，有人小声嘀咕："这也太过分了吧……"不少人掏出了手机。\n\n现场气氛凝固了。你亲眼目睹了这一幕，手机就在口袋里。',
+     choices:[
+       {text:'将现场实拍照片发布至校园贴吧曝光',effects:{happiness:-5,wisdom:5},
+        result:'你看不惯学姐的霸道行为，掏出手机拍下了现场照片，匿名发布到了校园贴吧。帖子很快被大量转发和评论，不少同学在评论区声援被欺负的新生。\n\n然而没过多久，辅导员张银雪就通过发帖IP找到了你。办公室里，张老师叹了口气："你的出发点是好的——但这种事应该先反映给老师，而不是直接发到网上。"经过一番长谈，你对校园事务的处理方式有了更成熟的认知。\n\n😔 幸福-5（被约谈的滋味不好受）\n📖 悟性+5（经过反思，心智得到提升）'},
+       {text:'收起手机，视而不见，不去惹麻烦',effects:{happiness:-2},
+        result:'你把手机塞回了口袋。虽然看不惯学姐的行为，但你不想惹麻烦——多一事不如少一事。\n\n合唱彩排如常进行，但你心里总觉得堵得慌。目睹不公却选择沉默，这种感觉比被冷风吹一晚上还难受。\n\n😔 幸福-2（目睹不公却未能发声）'}
+     ]}
+  ],
+  gfEvent:makeGfEvent('合唱彩排后的夜晚',
+    '漫长的合唱彩排终于结束了。你在科技楼门口站了一个多小时，嗓子喊哑了，腿也站麻了。苏小暖从人群中挤过来，手里端着一杯热乎乎的姜茶——不知道她从哪里搞来的。\n\n"快喝了吧，我从食堂阿姨那里讨的——天冷了，别感冒。"她把杯子塞到你手里，指尖冰凉，笑容却暖得不像话。',
+    '接过姜茶，和她一起在校园里走一走',{health:2,happiness:3},{gfFavor:7},
+    '你们并肩走在夜晚的校园里。银杏叶在路灯下泛着金色的光，呼出的白气在冷空气中凝成小小的雾团。她讲着今晚彩排的各种小插曲，你吐槽着文艺部学姐的恶劣行为。姜茶暖了胃，她的陪伴暖了心。走到她宿舍楼下时，她回头冲你笑了笑："明天见——记得多穿点！"',
+    '接过姜茶说了声谢谢，匆匆赶回宿舍取暖',{happiness:-4},
+    '"嗯……那你早点休息。"苏小暖站在原地，看着你的背影消失在宿舍楼门口。冷风吹过来，她把剩下那杯姜茶揣在怀里，一个人慢慢走回了自己的宿舍。那杯姜茶，她本来是打算两个人一起喝的。')
+};
+
+STORY_DAYS['2024-10-12']={
+  title:'开学第六天·合唱比赛冠军+金融理财解锁',
+  phases:[
+    // Phase 1: 团校判定
+    {type:'auto',tag:'团校',title:'团校学习活动',
+     condSkip:function(){return !GS.tuanxiaoAccepted;},
+     text:'清晨天光洒落校园，秋风微凉。今天上午虽无课程安排，但你按照团校安排准时前往指定教室参与学习、签到与集体活动。\n\n团校纪律严格，全程需保持专注、认真记录。整个上午的时间被团校活动填满，没有空余时间进行其他安排。你在笔记本上记下了满满的团校学习要点，虽然有些辛苦，但也算是充实的半天。',
+     effects:{}},
+    // Phase 2: 上午自由活动五选一
+    {type:'main',tag:'自由活动',title:'上午自由时光',
+     condSkip:function(){return GS.tuanxiaoAccepted;},
+     text:'清晨天光洒落校园，秋风微凉。今日上午无课程安排，你拥有一整段完整的自由时间。阳光穿过银杏树的枝叶在主干道上投下斑驳光影，校园里行人稀少，难得的清闲时光。\n\n你站在宿舍楼下伸了个懒腰，打算如何安排这个上午？',
+     choices:[
+       {text:'回宿舍睡觉，消解连日上课的疲惫',effects:{health:6},sleepBonus:true,
+        result:'你回到宿舍一头倒在床上。连日上课、排练合唱的疲惫终于有了补偿的机会——闭上眼睛，整个人陷在柔软的被子里，秋日凉爽的微风从半开的窗户吹进来，这一觉睡得天昏地暗，醒来时已是日上三竿。'},
+       {text:'回宿舍打游戏，沉浸娱乐放松身心',effects:{happiness:7},
+        result:'你打开电脑，登录游戏，戴上耳机。不用上课的上午，打游戏打得理直气壮。几局酣畅淋漓的对战下来，连日排练的疲惫一扫而空。'},
+       {text:'留在教室学习，潜心温习各科知识点',effects:{wisdom:5},
+        result:'你来到教学楼找了一间空教室坐下，翻开笔记本和课本。安静的教室里只有笔尖划过纸面的沙沙声——你把这周各科的重点内容重新梳理了一遍，心里踏实了不少。'},
+       {text:'前往大创中心拜访韩鹏老师',effects:{},
+        cond:true,condAttr:'keChuangUnlocked',condTh:1,
+        sEffects:{hanpengHaoGan:6},sText:'你来到大创中心，韩鹏老师正在调试一台新的示波器。看到你来，他热情地招呼你过去一起研究。你们一边调试设备一边聊着最近的科创比赛动向，韩老师还分享了不少做项目的实用经验。充实而有收获的一个上午。',
+        fText:'你来到大创中心门口，发现门锁着。看来韩鹏老师今天不在。也许下午再来看看？',
+        result:'你来到大创中心门口，发现门锁着。'},
+       {text:'约女友出来，相伴漫步校园',effects:{},
+        cond:true,condAttr:'gfUnlocked',condTh:1,
+        sEffects:{gfFavor:8},sText:'你给女友发了条消息，两人约在小花园碰头。秋日的校园美得醉人——你们并肩走过银杏大道，脚下踩着金黄的落叶，聊着各自的课表、吐槽着早八的困、分享着最近遇到的趣事。她说这种无所事事却有你陪伴的上午，是大学生活里最珍贵的片段。',
+        fText:'你翻出手机通讯录，才想起来——你现在是单身。也许以后会有机会的。',
+        result:'你翻出手机通讯录，才想起来你现在是单身。'}
+     ]},
+    // Phase 3: 偶遇亨利 → 解锁金融理财系统
+    {type:'auto',tag:'偶遇',title:'午后偶遇·亨利与理财之道',
+     text:'午后的校园步道上人来人往，阳光穿过枝叶洒下斑驳光影。你闲逛途中偶然撞见了亨利——他独自靠在路旁的树干上，整个人低着头，目光紧紧锁定手机屏幕，全然没有留意周遭来往的人群。\n\n正当你准备走过去打个招呼时，他的手机里接连传出清脆的提示音——一声声"支付宝到账"此起彼伏，在安静的路边格外引人注目。\n\n察觉到你的目光，亨利抬起头冲你笑了笑："哦，你也在啊。没什么——就是看了看最近的资产配置。"他简单与你攀谈了几句，聊起了资金打理与资产规划的门道。\n\n"你知道吗？校园里有不少人在玩模拟理财——虽然资金规模不大，但学到的投资思维才是关键。"亨利滑动着手机屏幕，向你展示了他手中几只"股票"的走势图，"鸟爷控股、笨笨传媒、波比实业——各有各的脾气。有兴趣的话，你也可以试试。"\n\n在他的引荐与讲解下，你对校园模拟理财产生了浓厚的兴趣。亨利帮你注册了模拟账户——从现在开始，你可以在每个工作日自由买卖这三支标的了。\n\n📌 系统提示：金融理财系统已解锁！右下角新增【📈 金融理财】按钮，点击即可进入交易页面。\n⚠️ 股市仅工作日开市，周末及节假日休市。投资有风险，入市需谨慎！',
+     effects:{},setFlags:{stocksUnlocked:true}},
+    // Phase 4: 合唱比赛通知
+    {type:'auto',tag:'📢 通知',title:'10.12合唱比赛正式通知',
+     text:'傍晚时分，合唱团负责人发来今晚正式比赛的最终通知：\n\n🌟 !! 10.12合唱比赛 !! 🌟\n🔺集合时间：18:10\n🔺集合地点：舞台背景板后侧的阶梯上\n集体紧密大队形，辛苦合唱负责人帮忙组织一下～\n🔴安排：正式比赛！\n1.比赛前完善细节\n2.比赛\n🔴注意事项：\n1.比赛现场候场时保持安静\n2.稍后会发布详细注意事项，请大家关注！\n🟡穿好【长袖长裤军训服+深色运动鞋】！！！！！！！\n🟡拿好小国旗！！！\n🟡大家都可以自愿化化妆哦💋\n🔥渐入秋冬，天气愈加寒凉！大家注意【在军训服里面】多添衣物！！！\n\n你读完通知，赶紧翻出柜子里的长袖军训服和深色运动鞋，把小国旗整整齐齐地叠好放进外套口袋。隔壁宿舍已经有同学在互相帮忙化妆了——今晚，是检验所有排练成果的最终时刻。',
+     effects:{}},
+    // Phase 5: 合唱正式比赛
+    {type:'auto',tag:'🏆 合唱',title:'合唱正式比赛·荣耀夺冠',
+     text:'暮色四合，赛场灯火通明。各个参赛队伍依次列队就位，科技楼前的广场上人山人海，舞台两侧的聚光灯将夜空照得如同白昼。\n\n你和班级同学身着整齐的长袖长裤军训服，脚踩深色运动鞋，不少人在队中互相帮忙整理仪容——有同学细致地化了淡妆，有人反复调整着衣领和袖口。每个人手中都紧握着一面鲜红的小国旗，按照提醒，大家都在军训服里面悄悄加穿了厚实的保暖衣物，抵御夜晚的寒凉。\n\n候场期间，全员严格保持安静。队形排列得紧凑整齐——你站在队列中，身边是同班同学沉稳的呼吸声。指挥站在最前方，低声提醒着每个声部的注意事项，大家互相提醒站位、彼此整理旗角，将连日来排练的每一个细节逐一巩固。\n\n轮到本班登场——指挥一个干脆利落的手势，全员迈着整齐的步伐走向舞台。聚光灯打在脸上有些刺眼，但你看到台下评委席上的老师们都在认真注视。\n\n伴奏缓缓响起。首先唱响的是东北大学校歌——嘹亮的歌声铿锵有力，饱含着对校园的归属感与青春热忱，每一个音符都掷地有声。台上的队列笔直如松，小国旗在灯光下整齐挥舞，台下的观众渐渐安静下来，有人轻轻跟着哼唱。\n\n一曲落幕，全场安静了一秒，紧接着旋律切换——《少年中国说》的前奏响起。少年意气、昂扬斗志透过歌声传递而出，"少年强则国强"的旋律振奋人心，全班的演唱配合默契、声线整齐划一，队列动作规范划一，连日来所有排练的成果在这一刻完美呈现。\n\n最后一个音符落下，全场爆发出雷鸣般的掌声。你看到评委席上的老师纷纷点头，有几位甚至站了起来。\n\n全部参赛队伍表演结束后，主持人手持话筒走到舞台中央，依次公布获奖名单。当念到你们班级的名字时，整个队伍瞬间沸腾——\n\n🏆 冠军！！！\n\n你们班斩获本次合唱比赛第一名！欢呼声、拥抱、雀跃——所有的辛苦排练、每一个夜晚的反复磨合，在这一刻全部得到了回报。你手中的小国旗在聚光灯下格外鲜艳，身边同学的眼眶都有些湿润。\n\n赛后辅导员笑着走过来拍了拍你的肩膀："干得漂亮！学校说了——冠军班级减免一个月早操！"周围的同学听到这话又是一阵欢呼。\n\n今晚的夜空格外清朗，星星似乎也比往常更亮。你站在科技楼门口，看着手中那面陪伴你走过整个合唱旅程的小国旗，心里涌起一股难以言喻的骄傲与感动。',
+     effects:{glory:30},setFlags:{zaocaoExempt:true}}
+  ],
+  gfEvent:makeGfEvent('冠军之夜',
+    '合唱比赛结束后，人群渐渐散去。你在舞台侧面的台阶上坐着，手里还攥着那面小国旗，嗓子有些沙哑，但脸上的笑容怎么都收不住。\n\n苏小暖从人群中找到了你。她今天也化了淡妆，军训服的拉链拉到最上面——里面显然穿了不止一件保暖衣。"恭喜冠军先生——"她笑着在你身边坐下，递过来一瓶温热的矿泉水，"我让食堂阿姨帮忙热了一下。你刚才在台上的时候，我在下面一直录视频——虽然手抖得不行，但你的声音真的好稳。"',
+    '接过温水，和她并肩坐在台阶上分享这份喜悦',{health:2,happiness:6},{gfFavor:8},
+    '你们并肩坐在舞台侧面的台阶上，周围是渐渐散去的人群和正在拆卸的设备。晚风微凉，但心里滚烫。她把手机递过来——视频里，聚光灯下的队列整齐划一，歌声嘹亮。画面最后定格在评委宣布冠军的那一刻，全班的欢呼声隔着屏幕都能感受到那份激动。\n\n"这个视频我要存一辈子。"她说。\n\n你笑着把水瓶递回给她："下次比赛，换我录你。"\n\n月亮从云层后面探出头来，洒在两个人肩头，像一层薄薄的银霜。',
+    '接过水说了声谢谢，太累了想早点回去休息',{happiness:-4},
+    '"嗯……好。今天确实太累了——回去好好休息。"苏小暖把水瓶塞到你手里，一个人坐在台阶上多待了一会儿。她把手机里录的视频从头到尾又看了一遍，在冷风中裹紧了军训服，才慢慢起身走回了宿舍。')
 };
 
 // ==================== 国庆假期渲染 ====================
@@ -1717,8 +1991,10 @@ function enterScriptedDays(){
 
 function processDay(){
   var dk=dateKey(GS.year,GS.month,GS.day);
-  var tmpFlags=['_attendedHanjie','_attendedMath','_signinTriggered','_attendedCherry','_quizzzTriggered','_attendedData','_paperTriggered','_attendedTania','_hugoTriggered','_cppAttended','_attendedCherry10','_attendedMath10','_signinTriggered10'];
+  var tmpFlags=['_attendedHanjie','_attendedMath','_signinTriggered','_attendedCherry','_quizzzTriggered','_attendedData','_paperTriggered','_attendedTania','_hugoTriggered','_cppAttended','_attendedCherry10','_attendedMath10','_signinTriggered10','_attendedTania11','_attendedData11','_paperTriggered11','_attendedMath11','_signinTriggered11','_hugoTriggered11'];
   for(var tf=0;tf<tmpFlags.length;tf++){delete GS[tmpFlags[tf]];}
+  GS.weather=pickDailyWeather();doEffects(GS.weather.effects);
+  if(GS.stocksUnlocked)updateStockPrices();
   if(GS.day===1)applyMonthly();
   var isHoliday=HOLIDAY_DAYS[dk]?true:false;
   if(!isHoliday&&GS.gfUnlocked&&GS.gfFavor>0){
@@ -1761,7 +2037,11 @@ function processDayContinueInner(dk){
   var sd=STORY_DAYS[dk];
   if(sd){
     GS.currentDay=dk;GS.currentPhaseIdx=0;
-    renderDayTitle(sd);renderDayPhase(sd,0);
+    renderDayTitle(sd);
+    if(GS.weather){
+      $('story-text').innerHTML='<div style="color:#6b5f50;font-size:.85em;margin-bottom:6px;">'+GS.weather.icon+' 今日天气：'+GS.weather.name+' · '+GS.weather.desc+'</div>';
+    }
+    renderDayPhase(sd,0);
   }else{
     renderGenericDay();
   }
@@ -1958,6 +2238,14 @@ function renderDayPhase(dayData,idx){
         }
         else{Object.assign(eff4,pc.fEffects||{});pc._result=pc.fText;}
       }
+      if(pc.sleepBonus){
+        var sb=getWeatherSleepBonus();
+        if(Object.keys(sb).length>0){
+          Object.assign(eff4,sb);
+          var br=pc._result||pc.result||'';
+          pc._result=br+'\n\n🌧️ '+getWeatherSleepNarrative();
+        }
+      }
       var allHidden=hiddenInfo4;if(riskInfo)allHidden=allHidden?allHidden+' | '+riskInfo:riskInfo;
       var changes4=doEffects(eff4);
       $('choices-area').innerHTML='';
@@ -2079,7 +2367,7 @@ var DAILY_ACTIVITIES=[
   {text:'📚 去图书馆自习',effects:{wisdom:8}},
   {text:'🏃 去操场运动锻炼',effects:{health:8}},
   {text:'🎭 参加社团活动',effects:{charm:6,happiness:6}},
-  {text:'🏠 在宿舍休息放松',effects:{health:4,happiness:4}},
+  {text:'🏠 在宿舍休息放松',effects:{health:4,happiness:4},sleepBonus:true},
   {text:'💼 做兼职赚取零花钱',effects:{money:100,health:-3}},
   {text:'🎓 参加学术讲座',effects:{wisdom:6,glory:3}}
 ];
@@ -2153,14 +2441,20 @@ function renderGenericDay(){
     evtHtml='<div style="color:#8b7d6b;font-size:.85em;margin-bottom:10px;">📌 今日事件</div>'+evt.text+'<br>';
     if(evtChanges){for(var k4 in evtChanges){if(evtChanges.hasOwnProperty(k4)&&evtChanges[k4]!==0){var s2=evtChanges[k4]>0?'+':'';evtHtml+='<span style="color:'+(evtChanges[k4]>0?'#1e7e34':'#c0392b')+';font-size:.85em;">'+(ICON[k4]||'')+' '+(ATTR[k4]||k4)+' '+s2+evtChanges[k4]+' </span>';}}}
   }
-  $('main-area').innerHTML='<div id="story-title">📅 '+dStr+'　星期'+wd+'</div><div id="story-text">'+evtHtml+'<br><div style="color:#8b7d6b;font-size:.85em;">👇 选择今天的行动</div></div>';
+  var weatherHtml='';
+  if(GS.weather)weatherHtml='<div style="color:#6b5f50;font-size:.85em;margin-bottom:6px;">'+GS.weather.icon+' 今日天气：'+GS.weather.name+' · '+GS.weather.desc+'</div>';
+  $('main-area').innerHTML='<div id="story-title">📅 '+dStr+'　星期'+wd+'</div><div id="story-text">'+weatherHtml+evtHtml+'<br><div style="color:#8b7d6b;font-size:.85em;">👇 选择今天的行动</div></div>';
   updatePanel();
   $('choices-area').innerHTML='';
   DAILY_ACTIVITIES.forEach(function(act){
     var btn=document.createElement('button');btn.textContent=act.text;
     btn.onclick=function(){
-      var ch=doEffects(act.effects);
-      showPopup('今日行动',act.text,ch,null,function(){
+      var eff5=Object.assign({},act.effects);
+      if(act.sleepBonus){var sb2=getWeatherSleepBonus();if(Object.keys(sb2).length>0){Object.assign(eff5,sb2);}}
+      var ch=doEffects(eff5);
+      var popText2=act.text;
+      if(act.sleepBonus&&Object.keys(getWeatherSleepBonus()).length>0)popText2+='\n\n🌧️ '+getWeatherSleepNarrative();
+      showPopup('今日行动',popText2,ch,null,function(){
         updatePanel();
         $('story-text').innerHTML+='<br><strong>✅ '+act.text+'</strong>';
         $('choices-area').innerHTML='';
@@ -2226,6 +2520,140 @@ function renderDailyGfEvent(callback){
 
 function applyMonthly(){GS.money+=2500;if(GS.hasPhoneCard)GS.money-=49;}
 
+// ===== 金融理财系统 =====
+var STOCK_NAMES={niaoye:'鸟爷控股',benben:'笨笨传媒',bobi:'波比实业'};
+var STOCK_VOLS={niaoye:1.0,benben:0.7,bobi:0.4};
+var STOCK_INIT={niaoye:18,benben:12,bobi:8};
+
+function updateStockPrices(){
+  var dk=fmtDate(GS.year,GS.month,GS.day);
+  if(GS.lastStockDay===dk)return;
+  if(!isWeekday(GS.year,GS.month,GS.day))return;
+  if(HOLIDAY_DAYS[dateKey(GS.year,GS.month,GS.day)])return;
+  GS.stockPrevPrices={niaoye:GS.stockPrices.niaoye,benben:GS.stockPrices.benben,bobi:GS.stockPrices.bobi};
+  GS.stockPrices.niaoye=genStockPrice(GS.stockPrices.niaoye,STOCK_VOLS.niaoye);
+  GS.stockPrices.benben=genStockPrice(GS.stockPrices.benben,STOCK_VOLS.benben);
+  GS.stockPrices.bobi=genStockPrice(GS.stockPrices.bobi,STOCK_VOLS.bobi);
+  GS.lastStockDay=dk;
+}
+function genStockPrice(prev,vol){
+  var r=(Math.random()*2-1)*vol*0.1;
+  var np=prev*(1+r);
+  np=Math.max(prev*0.9,Math.min(prev*1.1,np));
+  return Math.round(np*100)/100;
+}
+
+function openStocks(){
+  if(!GS.stocksUnlocked){showToast('金融市场尚未解锁，请等待相关剧情触发。');return;}
+  updateStockPrices();
+  renderStocksPanel();
+}
+
+function renderStocksPanel(){
+  var prev=GS.stockPrevPrices;
+  var cur=GS.stockPrices;
+  var symbols=['niaoye','benben','bobi'];
+  var totalCost=0,totalValue=0,totalPL=0,dayPL=0;
+  var isTrade=isWeekday(GS.year,GS.month,GS.day)&&!HOLIDAY_DAYS[dateKey(GS.year,GS.month,GS.day)];
+
+  var rows='';
+  for(var i=0;i<symbols.length;i++){
+    var s=symbols[i];
+    var h=GS.holdings[s];
+    var price=cur[s];
+    var prevPrice=prev[s]||price;
+    var change=price-prevPrice;
+    var changePct=prevPrice>0?(change/prevPrice*100):0;
+    var mv=h.shares*price;
+    var pl=mv-h.costBasis;
+    var dayPl=(price-prevPrice)*h.shares;
+    totalCost+=h.costBasis;
+    totalValue+=mv;
+    totalPL+=pl;
+    dayPL+=dayPl;
+    var updown=change>=0?'pos':'neg';
+    var sign=change>=0?'+':'';
+    var isLimitUp=(price>=prevPrice*1.099);
+    var isLimitDown=(price<=prevPrice*0.901);
+    rows+='<div class="stock-item">'+
+      '<div class="stock-info">'+
+        '<div class="stock-name">'+STOCK_NAMES[s]+'</div>'+
+        '<div class="stock-price">¥'+price.toFixed(2)+' <span class="stock-change '+updown+'">'+sign+change.toFixed(2)+' ('+sign+changePct.toFixed(1)+'%)</span></div>'+
+        '<div class="stock-hold">持仓：<strong>'+(h.shares||0)+'股</strong> 成本：¥'+(h.costBasis||0).toFixed(2)+' 市值：¥'+mv.toFixed(2)+' 盈亏：<span class="'+(pl>=0?'pos':'neg')+'">'+(pl>=0?'+':'')+pl.toFixed(2)+'</span></div>'+
+      '</div>'+
+      '<div class="stock-actions">'+
+        '<button onclick="buyStock(\''+s+'\')"'+(isLimitUp||!isTrade?' disabled':'')+'>买入1手</button>'+
+        '<button onclick="sellStock(\''+s+'\')"'+(isLimitDown||!isTrade?' disabled':'')+(h.shares<10?' disabled':'')+'>卖出1手</button>'+
+      '</div>'+
+    '</div>';
+  }
+
+  var html='<div class="stocks-overlay" id="stocks-overlay" onclick="if(event.target===this)closeStocks()">'+
+    '<div class="stocks-box" id="stocks-box">'+
+      '<div class="stocks-title">📈 金融理财市场</div>'+
+      '<div class="stocks-subtitle">当前金钱：<strong>¥'+GS.money+'</strong>　|　'+fmtDate(GS.year,GS.month,GS.day)+(isTrade?'　交易日':'　休市')+'</div>'+
+      '<div class="stocks-summary">'+
+        '<span>持仓成本：<strong>¥'+totalCost.toFixed(2)+'</strong></span>'+
+        '<span>持仓市值：<strong>¥'+totalValue.toFixed(2)+'</strong></span>'+
+        '<span>总盈亏：<strong class="'+(totalPL>=0?'pos':'neg')+'">'+(totalPL>=0?'+':'')+totalPL.toFixed(2)+'</strong></span>'+
+        '<span>当日参考盈亏：<strong class="'+(dayPL>=0?'pos':'neg')+'">'+(dayPL>=0?'+':'')+dayPL.toFixed(2)+'</strong></span>'+
+      '</div>'+
+      rows+
+      '<div class="stocks-rules">📋 规则：1手=10股 ｜ 买入手续费1% ｜ 卖出手续费1% ｜ 涨跌停±10% ｜ 工作日交易</div>'+
+      '<button class="stocks-close" onclick="closeStocks()">关闭</button>'+
+    '</div>'+
+  '</div>';
+  var existing=document.getElementById('stocks-overlay');
+  if(existing)existing.parentNode.removeChild(existing);
+  var div=document.createElement('div');
+  div.innerHTML=html;
+  document.body.appendChild(div.firstElementChild);
+}
+
+function closeStocks(){
+  var el=document.getElementById('stocks-overlay');
+  if(el)el.parentNode.removeChild(el);
+}
+
+function buyStock(sym){
+  updateStockPrices();
+  var price=GS.stockPrices[sym];
+  var total=price*10*1.01;
+  var limitUp=GS.stockPrevPrices[sym]?price>=GS.stockPrevPrices[sym]*1.099:false;
+  if(limitUp){showToast('该股票已涨停，无法买入！');return;}
+  if(GS.money<total){showToast('金钱不足！买入1手需 ¥'+total.toFixed(2)+'（含1%手续费）');return;}
+  if(!confirm('确认买入 '+STOCK_NAMES[sym]+' 1手（10股）？\n价格：¥'+price.toFixed(2)+'/股\n手续费(1%)：¥'+(price*10*0.01).toFixed(2)+'\n合计：¥'+total.toFixed(2))){
+    return;
+  }
+  GS.money=GS.money-total;
+  var h=GS.holdings[sym];
+  h.shares+=10;
+  h.costBasis+=price*10*1.01;
+  updatePanel();
+  showToast('✅ 成功买入 '+STOCK_NAMES[sym]+' 1手！');
+  renderStocksPanel();
+}
+
+function sellStock(sym){
+  updateStockPrices();
+  var price=GS.stockPrices[sym];
+  var h=GS.holdings[sym];
+  var limitDown=GS.stockPrevPrices[sym]?price<=GS.stockPrevPrices[sym]*0.901:false;
+  if(limitDown){showToast('该股票已跌停，无法卖出！');return;}
+  if(h.shares<10){showToast('持仓不足！当前持有 '+h.shares+' 股。');return;}
+  var revenue=price*10*0.99;
+  if(!confirm('确认卖出 '+STOCK_NAMES[sym]+' 1手（10股）？\n价格：¥'+price.toFixed(2)+'/股\n手续费(1%)：¥'+(price*10*0.01).toFixed(2)+'\n到账：¥'+revenue.toFixed(2))){
+    return;
+  }
+  GS.money=GS.money+revenue;
+  var avgCost=h.shares>0?h.costBasis/h.shares:0;
+  h.shares-=10;
+  h.costBasis=Math.max(0,h.costBasis-avgCost*10);
+  updatePanel();
+  showToast('✅ 成功卖出 '+STOCK_NAMES[sym]+' 1手！');
+  renderStocksPanel();
+}
+
 // ===== 存档 =====
 function saveGame(){
   if(!GS||GS.phase==='title'||GS.phase==='allocation')return;
@@ -2255,7 +2683,10 @@ function saveGame(){
     hanjieFavor:GS.hanjieFavor,cherryFavor:GS.cherryFavor,liguoruiFavor:GS.liguoruiFavor,
     hanjieUnlocked:GS.hanjieUnlocked,cherryUnlocked:GS.cherryUnlocked,liguoruiUnlocked:GS.liguoruiUnlocked,
     songjunliFavor:GS.songjunliFavor,songjunliUnlocked:GS.songjunliUnlocked,
-    acmRegistered:GS.acmRegistered,lastBonusDay:GS.lastBonusDay
+    acmRegistered:GS.acmRegistered,lastBonusDay:GS.lastBonusDay,weather:GS.weather,
+    putonghuaRegistered:GS.putonghuaRegistered,zhuchirenRegistered:GS.zhuchirenRegistered,
+    stocksUnlocked:GS.stocksUnlocked,holdings:GS.holdings,stockPrices:GS.stockPrices,
+    lastStockDay:GS.lastStockDay,stockPrevPrices:GS.stockPrevPrices,zaocaoExempt:GS.zaocaoExempt
   };
   try{localStorage.setItem('dongqin_save4',JSON.stringify(data));}catch(e){}
 }
@@ -2278,7 +2709,7 @@ function resetToTitle(){GS=defaultState();renderTitle();}
 
 function exportSave(){
   if(!GS||GS.phase==='title'||GS.phase==='allocation'){showToast('无存档可导出');return;}
-  var data={v:4,year:GS.year,month:GS.month,day:GS.day,health:GS.health,happiness:GS.happiness,wisdom:GS.wisdom,charm:GS.charm,glory:GS.glory,money:GS.money,singing:GS.singing,hasPengyuanCard:GS.hasPengyuanCard,hasPhoneCard:GS.hasPhoneCard,talentPerformed:GS.talentPerformed,talentSuccess:GS.talentSuccess,wonElection:GS.wonElection,tuanxiaoApplied:GS.tuanxiaoApplied,tuanxiaoAccepted:GS.tuanxiaoAccepted,dachuangJoined:GS.dachuangJoined,hanpengHaoGan:GS.hanpengHaoGan,cet4Applied:GS.cet4Applied,deskBought:GS.deskBought,clubApplied:GS.clubApplied,clubType:GS.clubType,keChuangUnlocked:GS.keChuangUnlocked,sheTuanUnlocked:GS.sheTuanUnlocked,tuanxiaoWeekBan:GS.tuanxiaoWeekBan,gfUnlocked:GS.gfUnlocked,gfName:GS.gfName,gfFavor:GS.gfFavor,inventory:GS.inventory,phase:GS.phase,currentNode:GS.currentNode,currentDay:GS.currentDay,currentPhaseIdx:GS.currentPhaseIdx,pengyuanBalance:GS.pengyuanBalance,tuanxiaoWisdomPending:GS.tuanxiaoWisdomPending,teacherFavor:GS.teacherFavor,classmateFavor:GS.classmateFavor,lastMealDay:GS.lastMealDay,breakupProb:GS.breakupProb,courseGrades:GS.courseGrades,taniaFavor:GS.taniaFavor,shijianmingFavor:GS.shijianmingFavor,zhouruiFavor:GS.zhouruiFavor,hanpengUnlocked:GS.hanpengUnlocked,taniaUnlocked:GS.taniaUnlocked,shijianmingUnlocked:GS.shijianmingUnlocked,zhouruiUnlocked:GS.zhouruiUnlocked,weekendEventReduction:GS.weekendEventReduction,holidayRoute:GS.holidayRoute,hanjieFavor:GS.hanjieFavor,cherryFavor:GS.cherryFavor,liguoruiFavor:GS.liguoruiFavor,hanjieUnlocked:GS.hanjieUnlocked,cherryUnlocked:GS.cherryUnlocked,liguoruiUnlocked:GS.liguoruiUnlocked,songjunliFavor:GS.songjunliFavor,songjunliUnlocked:GS.songjunliUnlocked,acmRegistered:GS.acmRegistered,lastBonusDay:GS.lastBonusDay};
+  var data={v:4,year:GS.year,month:GS.month,day:GS.day,health:GS.health,happiness:GS.happiness,wisdom:GS.wisdom,charm:GS.charm,glory:GS.glory,money:GS.money,singing:GS.singing,hasPengyuanCard:GS.hasPengyuanCard,hasPhoneCard:GS.hasPhoneCard,talentPerformed:GS.talentPerformed,talentSuccess:GS.talentSuccess,wonElection:GS.wonElection,tuanxiaoApplied:GS.tuanxiaoApplied,tuanxiaoAccepted:GS.tuanxiaoAccepted,dachuangJoined:GS.dachuangJoined,hanpengHaoGan:GS.hanpengHaoGan,cet4Applied:GS.cet4Applied,deskBought:GS.deskBought,clubApplied:GS.clubApplied,clubType:GS.clubType,keChuangUnlocked:GS.keChuangUnlocked,sheTuanUnlocked:GS.sheTuanUnlocked,tuanxiaoWeekBan:GS.tuanxiaoWeekBan,gfUnlocked:GS.gfUnlocked,gfName:GS.gfName,gfFavor:GS.gfFavor,inventory:GS.inventory,phase:GS.phase,currentNode:GS.currentNode,currentDay:GS.currentDay,currentPhaseIdx:GS.currentPhaseIdx,pengyuanBalance:GS.pengyuanBalance,tuanxiaoWisdomPending:GS.tuanxiaoWisdomPending,teacherFavor:GS.teacherFavor,classmateFavor:GS.classmateFavor,lastMealDay:GS.lastMealDay,breakupProb:GS.breakupProb,courseGrades:GS.courseGrades,taniaFavor:GS.taniaFavor,shijianmingFavor:GS.shijianmingFavor,zhouruiFavor:GS.zhouruiFavor,hanpengUnlocked:GS.hanpengUnlocked,taniaUnlocked:GS.taniaUnlocked,shijianmingUnlocked:GS.shijianmingUnlocked,zhouruiUnlocked:GS.zhouruiUnlocked,weekendEventReduction:GS.weekendEventReduction,holidayRoute:GS.holidayRoute,hanjieFavor:GS.hanjieFavor,cherryFavor:GS.cherryFavor,liguoruiFavor:GS.liguoruiFavor,hanjieUnlocked:GS.hanjieUnlocked,cherryUnlocked:GS.cherryUnlocked,liguoruiUnlocked:GS.liguoruiUnlocked,songjunliFavor:GS.songjunliFavor,songjunliUnlocked:GS.songjunliUnlocked,acmRegistered:GS.acmRegistered,lastBonusDay:GS.lastBonusDay,weather:GS.weather};
   var str=JSON.stringify(data);
   var overlay=document.createElement('div');overlay.className='supermarket-overlay';
   overlay.innerHTML='<div class="save-export-box"><div class="se-title">📤 导出存档</div><textarea readonly id="se-textarea">'+str+'</textarea><div class="se-btns"><button class="se-btn-copy" id="se-copy">📋 一键复制</button><button class="se-btn-close" id="se-close">关闭</button></div></div>';
