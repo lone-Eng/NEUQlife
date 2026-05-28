@@ -550,6 +550,21 @@ sep14:[
 };
 
 // ===== 10.10 午间随机事件池 =====
+RP.oct13_midday=[
+  {title:'阳光午后小憩',text:'午后的阳光透过窗户洒进宿舍，暖洋洋的光线让人昏昏欲睡。你躺在床上闭目养神，醒来后感觉浑身充满了电。',choices:[
+    {text:'享受这片刻的宁静',effects:{health:5},result:'短短的小憩过后，你感觉精力充沛，整个人焕然一新。'}
+  ]},
+  {title:'食堂偶遇隐藏美食',text:'午饭时间你来到食堂，发现今天窗口推出了新品——一道你从未尝试过的特色菜。窗口前排着不短的队伍，但香味飘过来让你迈不动步子。',choices:[
+    {text:'排队点一份尝尝鲜',effects:{happiness:5},result:'你耐心排了几分钟的队，终于端到了这份传说中的新菜品。一口下去——简直是惊喜！小小的美食发现给周日带来了大大的满足感。'}
+  ]},
+  {title:'图书馆翻阅杂志偶得启发',text:'你路过图书馆的报刊阅览区，随手翻开了一本学术期刊。一篇关于学习方法的文章引起了你的注意，里面的几个观点让你豁然开朗。',choices:[
+    {text:'坐下来认真读完这篇文章',effects:{wisdom:5},result:'你花了几分钟认真读完了这篇短文。作者提出的学习方法让你对近期一直困惑的知识点有了新的理解思路。'}
+  ]},
+  {title:'校园散步偶遇同学称赞',text:'午后你在校园里散步，迎面碰见几个同班同学。其中一人笑着对你说："诶，你今天看起来气色特别好——是不是昨天合唱夺冠太高兴了？"',choices:[
+    {text:'笑着聊了几句，心情愉悦地继续散步',effects:{charm:5},result:'你和同学们站在路边聊了一会儿。被真诚地夸赞让整个人都更加自信了，走在路上步伐都轻快了几分。'}
+  ]}
+];
+
 RP.oct10=[
   {title:'社团宣传偶遇',text:'午休路过食堂门口，几个社团摊位前围满了人。音乐社的同学正在现场弹唱，吸引了不少人驻足围观。',choices:[
     {text:'停下来听一会儿，顺便了解社团信息',effects:{charm:4,happiness:3},result:'你挤进人群找了个好位置，听了一首完整的弹唱。旁边的社团成员热情地向你介绍了活动安排，你拿了张宣传单。'},
@@ -1809,6 +1824,102 @@ STORY_DAYS['2024-10-12']={
     '"嗯……好。今天确实太累了——回去好好休息。"苏小暖把水瓶塞到你手里，一个人坐在台阶上多待了一会儿。她把手机里录的视频从头到尾又看了一遍，在冷风中裹紧了军训服，才慢慢起身走回了宿舍。')
 };
 
+STORY_DAYS['2024-10-13']={
+  title:'周日·ACM选拔赛+晚自习',
+  phases:[
+    // Phase 1: 上午五选一
+    {type:'main',tag:'自由活动',title:'周日清晨·自由时光',
+     text:'周日的清晨，秋日阳光温柔地洒进宿舍窗户。校园褪去工作日的忙碌，整栋宿舍楼格外安静——大部分同学都在睡懒觉。\n\n昨日合唱夺冠的喜悦仍在延续，你躺在床上回味着昨晚的舞台和掌声，嘴角不自觉地上扬。今天没有早课，ACM招新选拔赛下午才开赛，上午的时间完全属于你自己。',
+     choices:[
+       {text:'回宿舍赖床睡觉，享受周日慵懒',effects:{health:6},sleepBonus:true,
+        result:'你翻了个身，把被子裹得更紧了些。周日不睡懒觉，天理难容。窗外偶尔传来几声鸟鸣，秋日的凉风从半开的窗户溜进来——这是属于周末的顶级享受。'},
+       {text:'起床打游戏，难得的全天无课日',effects:{happiness:7},
+        result:'你索性早起打游戏——毕竟没有课的周日最适合沉浸在虚拟世界里。戴上耳机，几局酣畅淋漓的对战下来，整个人神清气爽。'},
+       {text:'去教室安静自习，为下周课程做准备',effects:{wisdom:5},
+        result:'你洗了把脸来到教学楼。周末的教室空无一人，安静得能听见自己的呼吸声。你翻开课本把下周要学的内容预习了一遍，心里踏实了不少。'},
+       {text:'前往大创中心拜访韩鹏老师',effects:{},
+        cond:true,condAttr:'keChuangUnlocked',condTh:1,
+        sEffects:{hanpengHaoGan:6},sText:'你来到大创中心，韩鹏老师居然也在——他说周末实验室安静，最适合专心调试设备。他热情地邀你一起动手操作一台新到的开发板，边做边讲解原理。周末的实验室没有旁人，一对一的交流让你收获颇丰。',
+        fText:'你来到大创中心门口，周末门锁着——意料之中。韩鹏老师今天应该在家休息。',
+        result:'你来到大创中心门口，周末门锁着。'},
+       {text:'约女友出来，周末约会漫步校园',effects:{},
+        cond:true,condAttr:'gfUnlocked',condTh:1,
+        sEffects:{gfFavor:8},sText:'你给女友发了条消息："周日没课，出来走走？"两人约在小花园碰头，沿着银杏大道边走边聊。周末的校园像一座安静的大公园——整条路上只有你们两个人，踩在落叶上沙沙作响。她笑着说合唱比赛的时候在台下喊得嗓子都哑了，你说下次比赛换你给她加油。',
+        fText:'你翻出手机通讯录——还是单身。周末约会的场景只能在想象中上演。',
+        result:'你翻出手机通讯录——还是单身。'}
+     ]},
+    // Phase 2: 午间随机事件
+    {type:'random',tag:'午间',pool:'oct13_midday'},
+    // Phase 3: ACM 参赛决定
+    {type:'main',tag:'ACM',title:'ACM俱乐部招新选拔赛',
+     condSkip:function(){return !GS.acmRegistered;},
+     text:'午后计算机机房座无虚席，ACM俱乐部招新选拔赛正式开赛。走廊里站满了来自各年级的参赛选手，不少人手里还拿着算法笔记在做最后的复习。\n\n你远远看到了苏小暖——她也报名了这次选拔，正在候场区安静地翻看笔记。她抬头看到了你，冲你微微笑了笑。\n\n赛场门口张贴着选拔规则：笔试+机试，综合评分前30%入选。监考学长已经开始组织签到入场了。',
+     choices:[
+       {text:'整理状态，进入赛场认真答题',effects:{},flags:{_wentACM:true},
+        result:'你深吸一口气，走进了赛场。计算机机房里只剩键盘敲击声——题目比想象中要难，涵盖了基础算法和编程思维。你尽力答完了所有题目，提交后长舒一口气，在考场外等待最终成绩公示。'},
+       {text:'犹豫再三，最终还是放弃参赛',effects:{},
+        result:'你在机房门口站了一会儿，最终还是转身离开了。ACM的题目难度早有耳闻——你觉得自己准备得还不够充分，与其进去硬着头皮做题，不如把时间留给更擅长编程的同学。'}
+     ]},
+    // Phase 4a: 双入选
+    {type:'auto',tag:'ACM',title:'ACM选拔赛·成绩公示',
+     condSkip:function(){return !GS._wentACM||GS.wisdom<=150||!GS.gfUnlocked||GS.gfFavor<150;},
+     text:'榜单张贴在机房门口的公告栏上，人群一阵骚动。你挤到前面一行一行地找自己的名字——\n\n找到了！你的名字赫然在列，成功入选ACM俱乐部集训队！\n\n与此同时，你注意到苏小暖也凑到了榜单前——她的名字同样出现在了入选名单上。她转过头看到了你，眼睛一下子亮了起来："太好了！我们都进了！"\n\n她主动走上前来，语气里满是欣喜："以后一起参加集训、一起刷题备赛吧——有个伴互相督促，进步会快很多！"你笑着点了点头。ACM的旅程，从今天正式起航。',
+     effects:{glory:8,gfFavor:5}},
+    // Phase 4b: 你入选 + 苏小暖落选
+    {type:'auto',tag:'ACM',title:'ACM选拔赛·成绩公示',
+     condSkip:function(){return !GS._wentACM||GS.wisdom<=150||(GS.gfUnlocked&&GS.gfFavor>=150);},
+     text:'榜单张贴在机房门口的公告栏上，人群一阵骚动。你挤到前面一行一行地找自己的名字——\n\n找到了！你的名字赫然在列，成功入选ACM俱乐部集训队。凭借扎实的算法基础和逻辑思维能力，你在众多参赛选手中脱颖而出。\n\n然而你注意到苏小暖站在人群外围，神情有些失落。她的名字没有出现在入选名单上——这次选拔的难度超出了她的准备范围。她注意到你在看她，勉强挤出一个微笑，冲你简单点了点头，便转身独自走向了楼梯口。\n\n你本想追上去说点什么，但她的身影已经消失在了楼梯拐角。',
+     effects:{glory:8,gfFavor:-4}},
+    // Phase 4c: 你落选 + 苏小暖入选
+    {type:'auto',tag:'ACM',title:'ACM选拔赛·成绩公示',
+     condSkip:function(){return !GS._wentACM||GS.wisdom>150||!GS.gfUnlocked||GS.gfFavor<150;},
+     text:'榜单张贴在机房门口的公告栏上，人群一阵骚动。你挤到前面一行一行地找自己的名字——\n\n没有。你反复看了两遍，确实没有。这次选拔的题目难度超出了你的准备，几道算法题做得并不理想。\n\n你正准备默默离开，苏小暖从人群中走了出来——她的名字在入选名单上。她一眼就看到了你脸上的失落，轻轻走到你身边："别太放在心上——这次题确实很难，很多人都没发挥好。你要是愿意的话，我可以把集训的笔记和题目分享给你，下次再战。"\n\n她真诚的语气让你心里好受了一些。虽然今天输了比赛，但身边有人在意的感觉，已经比什么都值得。',
+     effects:{happiness:-4,gfFavor:6}},
+    // Phase 4d: 双落选
+    {type:'auto',tag:'ACM',title:'ACM选拔赛·成绩公示',
+     condSkip:function(){return !GS._wentACM||GS.wisdom>150||(GS.gfUnlocked&&GS.gfFavor>=150);},
+     text:'榜单张贴在机房门口的公告栏上，人群一阵骚动。你挤到前面一行一行地找自己的名字——\n\n没有。又看了一遍，还是没有。这次选拔的难度确实很高，你没有能够进入前30%。\n\n你从人群中退出来，看到苏小暖也站在榜单前面，表情平静。她的名字同样没有出现在上面——这次比赛对你们俩来说都有些力不从心。\n\n你们隔着人群对视了一眼，各自微微一笑，没有多说什么。赛场人潮渐渐散去，你们也默默离开了机房。本就是点头之交罢了——今天的交集到此为止，各自继续各自的大学生活。',
+     effects:{happiness:-2}},
+    // Phase 5: 下午五选一（仅未参赛/弃赛可见）
+    {type:'main',tag:'自由活动',title:'下午自由时光',
+     condSkip:function(){return GS._wentACM;},
+     text:'周日下午的阳光变得柔和了许多，校园里飘着桂花的余香。ACM赛场那边的喧闹与你无关——你拥有完整的下午空闲时间，可以随心安排自己的安排。',
+     choices:[
+       {text:'回宿舍睡觉，享受周日下午的慵懒',effects:{health:6},sleepBonus:true,
+        result:'你回到宿舍一头倒在床上。周日下午的午觉是周末的终极仪式感——闭上眼睛，整个人陷在柔软的被子里，阳光透过窗帘洒在被子上。这一觉睡得天昏地暗，醒来时已是黄昏。'},
+       {text:'回宿舍打游戏，难得的全天无课周末',effects:{happiness:7},
+        result:'你打开电脑，登录游戏，戴上耳机。周末的服务器格外热闹，你连赢了好几局，心情大好。室友从旁边经过时竖了个大拇指："今天手感不错啊！"'},
+       {text:'去教室安静自习，为下周课程蓄力',effects:{wisdom:5},
+        result:'你找了间空教室坐下，翻开课本和笔记。周末的教室安静得像图书馆，你利用这段时间把下周要讲的内容提前预习了，还整理了一份学习计划。'},
+       {text:'前往大创中心拜访韩鹏老师',effects:{},
+        cond:true,condAttr:'keChuangUnlocked',condTh:1,
+        sEffects:{hanpengHaoGan:6},sText:'你来到大创中心，韩鹏老师下午还在实验室里调试设备。看到你来，他放下手中的螺丝刀，招呼你坐下聊了起来。你们聊了很多——从科创比赛到未来规划，从项目经验到学习方法。韩鹏老师对技术的热情感染了你。',
+        fText:'你再次来到大创中心门口——依然锁着。看来韩鹏老师今天真的不在。',
+        result:'你来到大创中心门口——依然锁着。'},
+       {text:'约女友出来，周末约会的完美下午',effects:{},
+        cond:true,condAttr:'gfUnlocked',condTh:1,
+        sEffects:{gfFavor:8},sText:'你给女友发了条消息，两人约在图书馆门口碰头。周末的校园悠闲惬意——你们在校门口的奶茶店买了两杯热饮，沿着小路慢慢逛，聊着这一周发生的各种趣事，从合唱夺冠到ACM选拔。她说和你在一起的周末，是忙碌学业里最期待的充电时光。',
+        fText:'你翻出手机通讯录——还是单身。算了吧，一个人也挺好的。周末的自由时光，不需要向任何人报备。',
+        result:'你翻出手机通讯录——还是单身。'}
+     ]},
+    // Phase 6: 晚自习
+    {type:'main',tag:'晚间',title:'周日晚自习',
+     text:'夜幕降临，教学楼灯火通明。周日晚间全院统一安排晚自习，班委正在教室门口清点出勤人数，辅导员张银雪也会不定时抽查各班的出勤情况。\n\n教室里已经坐了不少同学，安静得只能听见翻书声和偶尔的咳嗽声。你在教室门口站了一会儿——今天一整天下来已经有些累了，晚自习去还是不去？',
+     choices:[
+       {text:'准时参加晚自习，沉下心梳理一周知识点',effects:{happiness:-4,wisdom:7},
+        result:'你找了个靠窗的位置坐下，翻开笔记本。安静的自习环境让思绪格外清晰，你把这一周各科的重点知识从头到尾梳理了一遍。虽然枯燥，但满满当当的笔记让人心里踏实——下周的课程心里有底了。'},
+       {text:'缺席晚自习，回宿舍钻进被窝睡大觉',effects:{glory:-5,health:6,happiness:5},sleepBonus:true,
+        result:'你趁班委不注意悄悄溜回了宿舍。缺勤记录被登记在册——辅导员张银雪明天早上大概率会找你谈话。但你躺在柔软的床上，全身肌肉逐渐放松，很快便沉入梦乡。比起在教室里枯坐两个小时，被窝的诱惑实在无法抵挡。\n\n⚠️ 荣耀-5（晚自习缺勤被登记）'}
+     ]}
+  ],
+  gfEvent:makeGfEvent('周日夜晚·一周的尾声',
+    '晚自习结束后走出教学楼，冷风吹得人精神一振。你远远看到苏小暖站在路灯下，双手插在外套口袋里，似乎在等什么人。\n\n看到你出来了，她小跑过来："终于等到你了——我刚才去小卖部买了热可可，多带了一杯给你。"她把冒着热气的纸杯递过来，笑容在路灯下显得格外温柔。"这一周发生了好多事情——从上课到合唱夺冠，感觉像过了一个月。"',
+    '接过热可可，和她并肩在路灯下走一会儿',{health:2,happiness:4},{gfFavor:7},
+    '你们捧着热可可慢慢走在夜晚的校园里。银杏叶在路灯下泛着金色的光，呼出的白气在冷空气中凝成小小的雾团。她细数着这一周各种难忘的瞬间——从ACM的紧张到合唱的激动，从课堂的趣事到此刻路灯下的热可可。\n\n走到她宿舍楼下，她转身冲你挥了挥手："下周见——晚安！"热可可喝完了，但心里那份暖意还在。',
+    '接过热可可道了谢，说太晚了得赶紧回宿舍',{happiness:-3},
+    '"嗯——那你路上慢点。晚安。"苏小暖把热可可塞到你手里，一个人站在路灯下目送你的背影消失在宿舍楼门口。夜风吹起她的发梢，她把外套的拉链拉到最上面，在路灯下又站了一会儿，才慢慢转身走回了自己的宿舍。')
+};
+
 // ==================== 国庆假期渲染 ====================
 function renderCampusEvent(evt,callback){
   var storyEl=$('story-text');
@@ -1991,7 +2102,7 @@ function enterScriptedDays(){
 
 function processDay(){
   var dk=dateKey(GS.year,GS.month,GS.day);
-  var tmpFlags=['_attendedHanjie','_attendedMath','_signinTriggered','_attendedCherry','_quizzzTriggered','_attendedData','_paperTriggered','_attendedTania','_hugoTriggered','_cppAttended','_attendedCherry10','_attendedMath10','_signinTriggered10','_attendedTania11','_attendedData11','_paperTriggered11','_attendedMath11','_signinTriggered11','_hugoTriggered11'];
+  var tmpFlags=['_attendedHanjie','_attendedMath','_signinTriggered','_attendedCherry','_quizzzTriggered','_attendedData','_paperTriggered','_attendedTania','_hugoTriggered','_cppAttended','_attendedCherry10','_attendedMath10','_signinTriggered10','_attendedTania11','_attendedData11','_paperTriggered11','_attendedMath11','_signinTriggered11','_hugoTriggered11','_wentACM'];
   for(var tf=0;tf<tmpFlags.length;tf++){delete GS[tmpFlags[tf]];}
   GS.weather=pickDailyWeather();doEffects(GS.weather.effects);
   if(GS.stocksUnlocked)updateStockPrices();
