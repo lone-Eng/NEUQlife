@@ -1,12 +1,12 @@
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif;background:linear-gradient(135deg,#e8e0d5,#d5cfc6 30%,#e0d8cc 60%,#ebe4d8);min-height:100vh;display:flex;justify-content:center;align-items:flex-start;padding:10px;color:#2c2416;}
-#game-container{width:100%;max-width:760px;background:#fefcf7;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,.12),0 1px 4px rgba(0,0,0,.06);overflow:hidden;margin:10px 0;}
-#attr-panel{background:linear-gradient(180deg,#1a3a5c,#1e4468);color:#f0e6d3;padding:16px 20px;display:none;}
+#game-container{width:100%;max-width:800px;background:#fefcf7;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,.12),0 1px 4px rgba(0,0,0,.06);overflow:hidden;margin:10px 0;}
+#attr-panel{background:linear-gradient(180deg,#1a3a5c,#1e4468);color:#f0e6d3;padding:14px 16px;display:none;}
 #attr-panel .date-row{text-align:center;font-size:1.05em;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,.15);letter-spacing:1px;}
 #attr-panel .date-row .date-main{font-size:1.15em;font-weight:600;}
 #attr-panel .date-row .date-sub{font-size:.85em;opacity:.7;margin-left:6px;}
-#attr-panel .attrs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px 10px;}
-#attr-panel .attr-item{display:flex;align-items:center;gap:4px;font-size:.82em;}
+#attr-panel .attrs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px 8px;}
+#attr-panel .attr-item{display:flex;align-items:center;gap:4px;font-size:.82em;white-space:nowrap;}
 #attr-panel .attr-icon{font-size:1em;width:18px;text-align:center;}
 #attr-panel .attr-name{opacity:.85;font-size:.9em;}
 #attr-panel .attr-val{font-weight:700;font-size:1em;}
@@ -25,8 +25,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',s
 #choices-area button:active{background:#e0d8cc;transform:translateX(1px);}
 #choices-area button.primary{background:#1a3a5c;color:#f0e6d3;border-color:#1a3a5c;text-align:center;font-weight:600;}
 #choices-area button.primary:hover{background:#1e4468;}
-#bottom-bar{padding:0 24px 16px;display:none;justify-content:center;gap:12px;}
-#bottom-bar button{padding:8px 18px;font-size:.82em;font-family:inherit;border:1px solid #ccc;border-radius:6px;background:#fefcf7;color:#666;cursor:pointer;transition:all .15s ease;}
+#bottom-bar{padding:0 24px 16px;display:none;justify-content:center;gap:8px;flex-wrap:wrap;}
+#bottom-bar button{padding:8px 12px;font-size:.8em;font-family:inherit;border:1px solid #ccc;border-radius:6px;background:#fefcf7;color:#666;cursor:pointer;transition:all .15s ease;white-space:nowrap;}
 #bottom-bar button:hover{border-color:#999;color:#333;}
 #title-screen{text-align:center;padding:60px 30px;}
 #title-screen h1{font-size:2.2em;color:#1a3a5c;margin-bottom:8px;letter-spacing:3px;}
@@ -106,12 +106,23 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',s
 .teacher-favor-box .tf-empty{text-align:center;color:#8b7d6b;font-size:.88em;padding:20px;}
 .grades-close,.tf-close{display:block;width:100%;margin-top:14px;padding:10px;font-size:.92em;font-family:inherit;background:#8b7d6b;color:#fff;border:none;border-radius:8px;cursor:pointer;text-align:center;}
 .grades-close:hover,.tf-close:hover{background:#6b5f50;}
+.save-export-box,.save-import-box{background:#fefcf7;border-radius:14px;padding:22px 20px 18px;max-width:500px;width:94%;max-height:85vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.25);animation:slideUp .25s ease;}
+.save-export-box .se-title,.save-import-box .si-title{font-size:1.2em;font-weight:700;color:#1a3a5c;margin-bottom:8px;text-align:center;}
+.save-export-box textarea,.save-import-box textarea{width:100%;height:120px;font-size:.75em;font-family:monospace;border:1px solid #d5cfc6;border-radius:8px;padding:10px;resize:vertical;margin-bottom:10px;background:#faf8f3;color:#2c2416;}
+.save-export-box .se-btns,.save-import-box .si-btns{display:flex;gap:10px;justify-content:center;}
+.save-export-box .se-btns button,.save-import-box .si-btns button,.save-import-box .si-close{padding:10px 20px;font-size:.9em;font-family:inherit;font-weight:600;border:none;border-radius:8px;cursor:pointer;}
+.se-btn-copy{background:#1a3a5c;color:#f0e6d3;}.se-btn-copy:hover{background:#1e4468;}
+.si-btn-confirm{background:#1e7e34;color:#fff;}.si-btn-confirm:hover{background:#25a344;}
+.se-btn-close,.si-btn-close{background:#8b7d6b;color:#fff;}.se-btn-close:hover,.si-btn-close:hover{background:#6b5f50;}
 @media(max-width:500px){
-  #attr-panel .attrs{grid-template-columns:repeat(3,1fr);}
+  #attr-panel .attrs{grid-template-columns:repeat(2,1fr);}
+  #attr-panel .attr-item{font-size:.76em;}
   #title-screen h1{font-size:1.6em;}
   #story-text{font-size:.95em;line-height:1.75;}
   #main-area{padding:16px;}
   #choices-area{padding:0 16px 16px;}
+  #bottom-bar{gap:6px;}
+  #bottom-bar button{padding:6px 10px;font-size:.75em;}
   .supermarket-box .sm-item{flex-wrap:wrap;}
   .supermarket-box .sm-payment{flex-direction:column;gap:6px;}
   .grades-box,.teacher-favor-box{padding:16px 14px 14px;}
