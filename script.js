@@ -88,6 +88,7 @@ function defaultState(){
     hanjieFavor:80,cherryFavor:80,liguoruiFavor:80,songjunliFavor:80,lixinyaoFavor:80,
     hanjieUnlocked:false,cherryUnlocked:false,liguoruiUnlocked:false,songjunliUnlocked:false,lixinyaoUnlocked:false,
     acmRegistered:false,lastBonusDay:'',weather:null,
+    storyLog:[],
     putonghuaRegistered:false,zhuchirenRegistered:false,
     stocksUnlocked:false,
     holdings:{niaoye:{shares:0,costBasis:0},benben:{shares:0,costBasis:0},bobi:{shares:0,costBasis:0}},
@@ -146,8 +147,19 @@ function updatePanel(){
   $('buff-row').innerHTML=b.map(function(x){return'<span>'+x+'</span>';}).join('');
 }
 
+var _logCtx=null; // 走马灯日志上下文
+
 // ===== 弹窗 =====
 function showPopup(title,resultText,changes,hiddenInfo,callback){
+  if(_logCtx&&title){
+    if(!GS.storyLog)GS.storyLog=[];
+    var entry={date:fmtDate(GS.year,GS.month,GS.day),title:title,changes:{}};
+    if(changes){for(var ck in changes){if(changes.hasOwnProperty(ck)&&changes[ck]!==0)entry.changes[ck]=changes[ck];}}
+    if(_logCtx.choice)entry.choice=_logCtx.choice;
+    if(resultText)entry.result=resultText;
+    GS.storyLog.push(entry);
+    _logCtx=null;
+  }
   var overlay=document.createElement('div');overlay.className='popup-overlay';
   var chgHtml='';
   if(changes&&Object.keys(changes).length>0){
@@ -179,7 +191,7 @@ function setPhase(p){
 }
 
 function renderBottomBar(){
-  $('bottom-bar').innerHTML='<button onclick="exportSave()">📤 导出</button><button onclick="importSave()">📥 导入</button><button onclick="openSupermarket()">🏪 利生超市</button><button onclick="openStocks()">📈 金融理财</button><button onclick="showGrades()">📊 成绩</button><button onclick="showTeacherFavors()">👨‍🏫 教师好感</button><button onclick="openClassmates()">👥 同学</button><button onclick="resetToTitle()">🏠 标题</button>';
+  $('bottom-bar').innerHTML='<button onclick="exportSave()">📤 导出</button><button onclick="importSave()">📥 导入</button><button onclick="openSupermarket()">🏪 利生超市</button><button onclick="openStocks()">📈 金融理财</button><button onclick="showGrades()">📊 成绩</button><button onclick="showTeacherFavors()">👨‍🏫 教师好感</button><button onclick="openClassmates()">👥 同学</button><button onclick="openTimeline()">📜 走马灯</button><button onclick="resetToTitle()">🏠 标题</button>';
 }
 
 // ===== 利生超市 =====
@@ -2059,6 +2071,7 @@ function renderCampusEvent(evt,callback){
       btn.onclick=function(){
         var changes=doEffects(Object.assign({},ec.effects||{}));
         $('choices-area').innerHTML='';
+        _logCtx={choice:ec.text};
         showPopup(evt.title,ec.result||'',changes,null,function(){
           updatePanel();if(callback)callback();
         });
@@ -2200,6 +2213,7 @@ function renderHolidayGfChoices(ge,routeKey,callback){
           updatePanel();
           showBreakupPopup(function(){updatePanel();if(callback)callback();});
         }else{
+          _logCtx={choice:gc.text};
           showPopup(ge.title,resultText,changes,null,function(){updatePanel();if(callback)callback();});
         }
       };
@@ -2260,6 +2274,7 @@ function processDayContinue(dk){
     var evt=DAILY_BONUS_EVENTS[Math.floor(Math.random()*DAILY_BONUS_EVENTS.length)];
     var changes=doEffects(Object.assign({},evt.effects));
     updatePanel();
+    _logCtx={choice:'（每日小幸运）'};
     showPopup('✨ 今日小幸运',evt.text,changes,null,function(){
       updatePanel();
       processDayContinueInner(dk);
@@ -2317,6 +2332,7 @@ function renderMealChoice(dk,callback){
         var changes=doEffects(eff);
         $('choices-area').innerHTML='';
         var title=stolen?'🚨 外卖被偷':'用餐';
+        _logCtx={choice:c.text};
         showPopup(title,resultText,changes,null,function(){
           updatePanel();
           if(callback)callback();
@@ -2361,6 +2377,7 @@ function renderDayPhase(dayData,idx){
     var ft=(tagHtml+'<strong>'+ph.title+'</strong>\n\n'+ph.text).replace(/\n/g,'<br>');
     storyEl.innerHTML=cur+'<br><br>'+ft;
     updatePanel();
+    _logCtx={choice:'（自动事件）'};
     showPopup(ph.title,'',changes,null,function(){renderDayPhase(dayData,idx+1);});
     return;
   }
@@ -2406,6 +2423,7 @@ function renderDayPhase(dayData,idx){
     var ft2=(tagHtml+'<strong>'+ph.title+'</strong>\n\n'+text).replace(/\n/g,'<br>');
     storyEl.innerHTML=cur+'<br><br>'+ft2;
     var changes2=doEffects(eff2);updatePanel();
+    _logCtx={choice:'（系统判定）'};
     showPopup(ph.title,'',changes2,hiddenInfo,function(){renderDayPhase(dayData,idx+1);});
     return;
   }
@@ -2429,6 +2447,7 @@ function renderDayPhase(dayData,idx){
         var changes3=doEffects(eff3);
         if(ec.cmFav){if(typeof ec.cmFav==='number'){var cmId3=ec._cmId;if(cmId3&&GS.classmateFavor&&GS.classmateFavor.hasOwnProperty(cmId3)){var oldFav3=GS.classmateFavor[cmId3]||0;GS.classmateFavor[cmId3]=Math.max(0,oldFav3+ec.cmFav);changes3[cmId3+'Fav']=ec.cmFav;}}else{for(var cmId in ec.cmFav){if(ec.cmFav.hasOwnProperty(cmId)&&GS.classmateFavor&&GS.classmateFavor.hasOwnProperty(cmId)){var oldFav3=GS.classmateFavor[cmId]||0;GS.classmateFavor[cmId]=Math.max(0,oldFav3+ec.cmFav[cmId]);changes3[cmId+'Fav']=ec.cmFav[cmId];}}}}
         $('choices-area').innerHTML='';
+        _logCtx={choice:ec.text};
         showPopup(evt.title,ec.result||'',changes3,null,function(){updatePanel();renderDayPhase(dayData,idx+1);});
       };
       $('choices-area').appendChild(btn);
@@ -2495,6 +2514,7 @@ function renderDayPhase(dayData,idx){
       var changes4=doEffects(eff4);
       if(pc.cmFav){if(typeof pc.cmFav==='number'){var cmIdP=pc._cmId;if(cmIdP&&GS.classmateFavor&&GS.classmateFavor.hasOwnProperty(cmIdP)){var oldFav4=GS.classmateFavor[cmIdP]||0;GS.classmateFavor[cmIdP]=Math.max(0,oldFav4+pc.cmFav);changes4[cmIdP+'Fav']=pc.cmFav;}}else{for(var cmId2 in pc.cmFav){if(pc.cmFav.hasOwnProperty(cmId2)&&GS.classmateFavor&&GS.classmateFavor.hasOwnProperty(cmId2)){var oldFav4=GS.classmateFavor[cmId2]||0;GS.classmateFavor[cmId2]=Math.max(0,oldFav4+pc.cmFav[cmId2]);changes4[cmId2+'Fav']=pc.cmFav[cmId2];}}}}
       $('choices-area').innerHTML='';
+      _logCtx={choice:pc.text};
       showPopup(ph.title||'',pc._result||pc.result||'',changes4,allHidden,function(){
         updatePanel();renderDayPhase(dayData,idx+1);
       });
@@ -2534,6 +2554,7 @@ function renderGfEvent(dayData){
           updatePanel();
           showBreakupPopup(function(){updatePanel();finishDay(dayData);});
         }else{
+          _logCtx={choice:gc.text};
           showPopup(ge.title,gc.result||'',changes,null,function(){
             updatePanel();finishDay(dayData);
           });
@@ -2824,6 +2845,7 @@ function triggerClassmateEvent(callback){
         changes[cmId+'Fav']=ch.cmFav;
       }
       $('choices-area').innerHTML='';
+      _logCtx={choice:ch.text};
       showPopup(evt.title,ch.result||'',changes,null,function(){
         updatePanel();if(callback)callback();
       });
@@ -2933,6 +2955,7 @@ function renderGenericDay(){
         var ch=doEffects(eff5);
         var popText2=act.text;
         if(act.sleepBonus&&Object.keys(getWeatherSleepBonus()).length>0)popText2+='\n\n🌧️ '+getWeatherSleepNarrative();
+        _logCtx={choice:act.text};
         showPopup('今日行动',popText2,ch,null,function(){
           updatePanel();
           $('story-text').innerHTML+='<br><strong>✅ '+act.text+'</strong>';
@@ -2961,6 +2984,7 @@ function renderDailyActions(callback){
       var ch=doEffects(eff5);
       var popText2=act.text;
       if(act.sleepBonus&&Object.keys(getWeatherSleepBonus()).length>0)popText2+='\n\n🌧️ '+getWeatherSleepNarrative();
+      _logCtx={choice:act.text};
       showPopup('今日行动',popText2,ch,null,function(){
         updatePanel();
         $('story-text').innerHTML+='<br><strong>✅ '+act.text+'</strong>';
@@ -3004,6 +3028,7 @@ function renderDailyGfEvent(callback){
           updatePanel();
           showBreakupPopup(function(){updatePanel();if(callback)callback();});
         }else{
+          _logCtx={choice:gc.text};
           showPopup(ge.title,gc.result||'',changes,null,function(){
             updatePanel();if(callback)callback();
           });
@@ -3207,6 +3232,57 @@ function dormInteract(type){
 }
 
 // ===== 存档 =====
+function openTimeline(){
+  if(!GS.storyLog||GS.storyLog.length===0){
+    var overlay=document.createElement('div');overlay.className='timeline-overlay';
+    overlay.innerHTML='<div class="timeline-box"><div class="timeline-title">📜 走马灯</div><div class="timeline-empty">暂无剧情记录<br><span style="font-size:.8em;">开始游戏后，每次选择和事件将自动记录在此</span></div><button class="timeline-close" id="tl-close">关闭</button></div>';
+    document.body.appendChild(overlay);
+    document.getElementById('tl-close').onclick=function(){overlay.remove();};
+    overlay.onclick=function(e){if(e.target===overlay)overlay.remove();};
+    return;
+  }
+  renderTimeline();
+}
+
+function renderTimeline(){
+  var groups={},dates=[];
+  for(var i=0;i<GS.storyLog.length;i++){
+    var entry=GS.storyLog[i];
+    if(!groups[entry.date]){groups[entry.date]=[];dates.push(entry.date);}
+    groups[entry.date].push(entry);
+  }
+  var html='<div class="timeline-box"><div class="timeline-title">📜 走马灯</div><div class="timeline-subtitle">共 '+dates.length+' 天 · '+GS.storyLog.length+' 条记录</div>';
+  for(var d=dates.length-1;d>=0;d--){
+    var date=dates[d];
+    html+='<div class="timeline-date-group"><div class="timeline-date-header">📅 '+date+' （'+(groups[date].length)+'条）</div>';
+    for(var j=groups[date].length-1;j>=0;j--){
+      var e=groups[date][j];
+      html+='<div class="timeline-entry"><div class="timeline-entry-title">'+e.title+'</div>';
+      if(e.choice)html+='<div class="timeline-entry-choice">▸ '+e.choice+'</div>';
+      if(e.changes&&Object.keys(e.changes).length>0){
+        html+='<div class="timeline-entry-changes">';
+        for(var ck in e.changes){
+          if(e.changes.hasOwnProperty(ck)&&e.changes[ck]!==0){
+            var cls2=e.changes[ck]>0?'pos':'neg';
+            var sign2=e.changes[ck]>0?'+':'';
+            html+='<span class="chg-item '+cls2+'" style="font-size:1em;">'+(ICON[ck]||'')+' '+(ATTR[ck]||ck)+' '+sign2+e.changes[ck]+'</span>';
+          }
+        }
+        html+='</div>';
+      }
+      if(e.result)html+='<div class="timeline-entry-result">'+e.result.replace(/\n/g,'<br>')+'</div>';
+      html+='</div>';
+    }
+    html+='</div>';
+  }
+  html+='<button class="timeline-close" id="tl-close">关闭</button></div>';
+  var overlay=document.createElement('div');overlay.className='timeline-overlay';
+  overlay.innerHTML=html;
+  document.body.appendChild(overlay);
+  document.getElementById('tl-close').onclick=function(){overlay.remove();};
+  overlay.onclick=function(e){if(e.target===overlay)overlay.remove();};
+}
+
 function saveGame(){
   if(!GS||GS.phase==='title'||GS.phase==='allocation')return;
   var data={
@@ -3239,7 +3315,8 @@ function saveGame(){
     acmRegistered:GS.acmRegistered,lastBonusDay:GS.lastBonusDay,weather:GS.weather,
     putonghuaRegistered:GS.putonghuaRegistered,zhuchirenRegistered:GS.zhuchirenRegistered,
     stocksUnlocked:GS.stocksUnlocked,holdings:GS.holdings,stockPrices:GS.stockPrices,
-    lastStockDay:GS.lastStockDay,stockPrevPrices:GS.stockPrevPrices,zaocaoExempt:GS.zaocaoExempt
+    lastStockDay:GS.lastStockDay,stockPrevPrices:GS.stockPrevPrices,zaocaoExempt:GS.zaocaoExempt,
+    storyLog:GS.storyLog
   };
   try{localStorage.setItem('dongqin_save4',JSON.stringify(data));}catch(e){}
 }
@@ -3262,7 +3339,7 @@ function resetToTitle(){GS=defaultState();renderTitle();}
 
 function exportSave(){
   if(!GS||GS.phase==='title'||GS.phase==='allocation'){showToast('无存档可导出');return;}
-  var data={v:4,year:GS.year,month:GS.month,day:GS.day,health:GS.health,happiness:GS.happiness,wisdom:GS.wisdom,charm:GS.charm,glory:GS.glory,money:GS.money,singing:GS.singing,hasPengyuanCard:GS.hasPengyuanCard,hasPhoneCard:GS.hasPhoneCard,talentPerformed:GS.talentPerformed,talentSuccess:GS.talentSuccess,wonElection:GS.wonElection,tuanxiaoApplied:GS.tuanxiaoApplied,tuanxiaoAccepted:GS.tuanxiaoAccepted,dachuangJoined:GS.dachuangJoined,hanpengHaoGan:GS.hanpengHaoGan,cet4Applied:GS.cet4Applied,deskBought:GS.deskBought,clubApplied:GS.clubApplied,clubType:GS.clubType,keChuangUnlocked:GS.keChuangUnlocked,sheTuanUnlocked:GS.sheTuanUnlocked,tuanxiaoWeekBan:GS.tuanxiaoWeekBan,gfUnlocked:GS.gfUnlocked,gfName:GS.gfName,gfFavor:GS.gfFavor,inventory:GS.inventory,phase:GS.phase,currentNode:GS.currentNode,currentDay:GS.currentDay,currentPhaseIdx:GS.currentPhaseIdx,pengyuanBalance:GS.pengyuanBalance,tuanxiaoWisdomPending:GS.tuanxiaoWisdomPending,teacherFavor:GS.teacherFavor,classmateFavor:GS.classmateFavor,lastMealDay:GS.lastMealDay,breakupProb:GS.breakupProb,courseGrades:GS.courseGrades,taniaFavor:GS.taniaFavor,shijianmingFavor:GS.shijianmingFavor,zhouruiFavor:GS.zhouruiFavor,hanpengUnlocked:GS.hanpengUnlocked,taniaUnlocked:GS.taniaUnlocked,shijianmingUnlocked:GS.shijianmingUnlocked,zhouruiUnlocked:GS.zhouruiUnlocked,weekendEventReduction:GS.weekendEventReduction,holidayRoute:GS.holidayRoute,hanjieFavor:GS.hanjieFavor,cherryFavor:GS.cherryFavor,liguoruiFavor:GS.liguoruiFavor,hanjieUnlocked:GS.hanjieUnlocked,cherryUnlocked:GS.cherryUnlocked,liguoruiUnlocked:GS.liguoruiUnlocked,songjunliFavor:GS.songjunliFavor,songjunliUnlocked:GS.songjunliUnlocked,lixinyaoFavor:GS.lixinyaoFavor,lixinyaoUnlocked:GS.lixinyaoUnlocked,acmRegistered:GS.acmRegistered,lastBonusDay:GS.lastBonusDay,weather:GS.weather,putonghuaRegistered:GS.putonghuaRegistered,zhuchirenRegistered:GS.zhuchirenRegistered,stocksUnlocked:GS.stocksUnlocked,holdings:GS.holdings,stockPrices:GS.stockPrices,lastStockDay:GS.lastStockDay,stockPrevPrices:GS.stockPrevPrices,zaocaoExempt:GS.zaocaoExempt,tuanxiaoWisdomPending:GS.tuanxiaoWisdomPending};
+  var data={v:4,year:GS.year,month:GS.month,day:GS.day,health:GS.health,happiness:GS.happiness,wisdom:GS.wisdom,charm:GS.charm,glory:GS.glory,money:GS.money,singing:GS.singing,hasPengyuanCard:GS.hasPengyuanCard,hasPhoneCard:GS.hasPhoneCard,talentPerformed:GS.talentPerformed,talentSuccess:GS.talentSuccess,wonElection:GS.wonElection,tuanxiaoApplied:GS.tuanxiaoApplied,tuanxiaoAccepted:GS.tuanxiaoAccepted,dachuangJoined:GS.dachuangJoined,hanpengHaoGan:GS.hanpengHaoGan,cet4Applied:GS.cet4Applied,deskBought:GS.deskBought,clubApplied:GS.clubApplied,clubType:GS.clubType,keChuangUnlocked:GS.keChuangUnlocked,sheTuanUnlocked:GS.sheTuanUnlocked,tuanxiaoWeekBan:GS.tuanxiaoWeekBan,gfUnlocked:GS.gfUnlocked,gfName:GS.gfName,gfFavor:GS.gfFavor,inventory:GS.inventory,phase:GS.phase,currentNode:GS.currentNode,currentDay:GS.currentDay,currentPhaseIdx:GS.currentPhaseIdx,pengyuanBalance:GS.pengyuanBalance,tuanxiaoWisdomPending:GS.tuanxiaoWisdomPending,teacherFavor:GS.teacherFavor,classmateFavor:GS.classmateFavor,lastMealDay:GS.lastMealDay,breakupProb:GS.breakupProb,courseGrades:GS.courseGrades,taniaFavor:GS.taniaFavor,shijianmingFavor:GS.shijianmingFavor,zhouruiFavor:GS.zhouruiFavor,hanpengUnlocked:GS.hanpengUnlocked,taniaUnlocked:GS.taniaUnlocked,shijianmingUnlocked:GS.shijianmingUnlocked,zhouruiUnlocked:GS.zhouruiUnlocked,weekendEventReduction:GS.weekendEventReduction,holidayRoute:GS.holidayRoute,hanjieFavor:GS.hanjieFavor,cherryFavor:GS.cherryFavor,liguoruiFavor:GS.liguoruiFavor,hanjieUnlocked:GS.hanjieUnlocked,cherryUnlocked:GS.cherryUnlocked,liguoruiUnlocked:GS.liguoruiUnlocked,songjunliFavor:GS.songjunliFavor,songjunliUnlocked:GS.songjunliUnlocked,lixinyaoFavor:GS.lixinyaoFavor,lixinyaoUnlocked:GS.lixinyaoUnlocked,acmRegistered:GS.acmRegistered,lastBonusDay:GS.lastBonusDay,weather:GS.weather,putonghuaRegistered:GS.putonghuaRegistered,zhuchirenRegistered:GS.zhuchirenRegistered,stocksUnlocked:GS.stocksUnlocked,holdings:GS.holdings,stockPrices:GS.stockPrices,lastStockDay:GS.lastStockDay,stockPrevPrices:GS.stockPrevPrices,zaocaoExempt:GS.zaocaoExempt,tuanxiaoWisdomPending:GS.tuanxiaoWisdomPending,storyLog:GS.storyLog};
   var str=JSON.stringify(data);
   var overlay=document.createElement('div');overlay.className='supermarket-overlay';
   overlay.innerHTML='<div class="save-export-box"><div class="se-title">📤 导出存档</div><textarea readonly id="se-textarea">'+str+'</textarea><div class="se-btns"><button class="se-btn-copy" id="se-copy">📋 一键复制</button><button class="se-btn-close" id="se-close">关闭</button></div></div>';

@@ -157,6 +157,24 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',s
 .cm-dorm button:hover{border-color:#1a3a5c;background:#f0ebe0;}
 .cm-dorm button:last-child{margin-bottom:0;}
 .cm-close{display:block;width:100%;margin-top:6px;padding:10px;font-size:.92em;font-family:inherit;background:#8b7d6b;color:#fff;border:none;border-radius:8px;cursor:pointer;text-align:center;}
+
+/* 走马灯 */
+.timeline-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;z-index:10001;}
+.timeline-box{background:#fefcf7;border-radius:14px;padding:18px;width:92vw;max-width:560px;max-height:80vh;overflow-y:auto;box-shadow:0 8px 30px rgba(0,0,0,.3);}
+.timeline-title{text-align:center;font-size:1.1em;font-weight:700;color:#1a3a5c;margin-bottom:4px;}
+.timeline-subtitle{text-align:center;font-size:.75em;color:#8b7d6b;margin-bottom:14px;}
+.timeline-empty{text-align:center;color:#8b7d6b;padding:24px 0;font-size:.9em;}
+.timeline-date-group{margin-bottom:12px;}
+.timeline-date-header{font-weight:700;color:#1a3a5c;font-size:.88em;padding:6px 0;border-bottom:2px solid #d5cfc6;margin-bottom:6px;}
+.timeline-entry{background:#faf7f2;border:1px solid #e8e2d8;border-radius:8px;padding:10px 12px;margin-bottom:6px;}
+.timeline-entry-title{font-weight:600;font-size:.85em;color:#2c2416;margin-bottom:2px;}
+.timeline-entry-choice{font-size:.78em;color:#1a3a5c;margin-bottom:4px;}
+.timeline-entry-changes{font-size:.75em;margin-bottom:4px;}
+.timeline-entry-changes span{margin-right:6px;}
+.timeline-entry-result{font-size:.75em;color:#6b5f50;line-height:1.5;max-height:60px;overflow:hidden;text-overflow:ellipsis;white-space:pre-line;border-top:1px dotted #e0d9cd;padding-top:4px;margin-top:4px;}
+.timeline-close{display:block;width:100%;margin-top:10px;padding:10px;font-size:.92em;font-family:inherit;background:#8b7d6b;color:#fff;border:none;border-radius:8px;cursor:pointer;text-align:center;}
+@media(max-width:600px){.timeline-box{width:95vw;padding:14px;}}
+
 .cm-close:hover{background:#6b5f50;}
 @media(max-width:500px){
   #attr-panel .attrs{grid-template-columns:repeat(2,1fr);}
