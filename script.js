@@ -7,8 +7,8 @@ function isWeekend(y,m,d){var w=new Date(y,m-1,d).getDay();return w===0||w===6;}
 function isWeekday(y,m,d){return !isWeekend(y,m,d);}
 function daysInMonth(y,m){if(m===2)return(y%4===0&&(y%100!==0||y%400===0))?29:28;return [31,28,31,30,31,30,31,31,30,31,30,31][m-1];}
 
-var ATTR={health:'健康',happiness:'幸福',wisdom:'悟性',charm:'魅力',glory:'荣耀',money:'金钱',singing:'歌唱能力',pengyuanBalance:'鹏远余额',gfFavor:'好感度',hanpengHaoGan:'韩鹏好感',teacherFavor:'教师好感',classmateFavor:'同学好感',taniaFavor:'Tania好感',shijianmingFavor:'史鉴明好感',zhouruiFavor:'周蕊好感',hanjieFavor:'韩杰好感',cherryFavor:'Cherry好感',liguoruiFavor:'李国瑞好感',songjunliFavor:'宋俊丽好感',lixinyaoFavor:'李心瑶好感',huyeFav:'虎爷好感',naikouFav:'奶扣好感',jingyeFav:'京爷好感'};
-var ICON={health:'❤️',happiness:'😊',wisdom:'📖',charm:'✨',glory:'🏆',money:'💰',singing:'🎤',pengyuanBalance:'💳',gfFavor:'💕',hanpengHaoGan:'🤝',teacherFavor:'👨‍🏫',classmateFavor:'👥',taniaFavor:'👩‍🏫',shijianmingFavor:'👨‍🔬',zhouruiFavor:'👩‍🏫',hanjieFavor:'👨‍🏫',cherryFavor:'👩‍🏫',liguoruiFavor:'👨‍💻',songjunliFavor:'👩‍🏫',lixinyaoFavor:'👩‍🏫',huyeFav:'🐯',naikouFav:'🍼',jingyeFav:'🏅'};
+var ATTR={health:'健康',happiness:'幸福',wisdom:'悟性',charm:'魅力',glory:'荣耀',money:'金钱',singing:'歌唱能力',performance:'表演能力',pengyuanBalance:'鹏远余额',gfFavor:'好感度',hanpengHaoGan:'韩鹏好感',teacherFavor:'教师好感',classmateFavor:'同学好感',taniaFavor:'Tania好感',shijianmingFavor:'史鉴明好感',zhouruiFavor:'周蕊好感',hanjieFavor:'韩杰好感',cherryFavor:'Cherry好感',liguoruiFavor:'李国瑞好感',songjunliFavor:'宋俊丽好感',lixinyaoFavor:'李心瑶好感',huyeFav:'虎爷好感',naikouFav:'奶扣好感',jingyeFav:'京爷好感'};
+var ICON={health:'❤️',happiness:'😊',wisdom:'📖',charm:'✨',glory:'🏆',money:'💰',singing:'🎤',performance:'🎭',pengyuanBalance:'💳',gfFavor:'💕',hanpengHaoGan:'🤝',teacherFavor:'👨‍🏫',classmateFavor:'👥',taniaFavor:'👩‍🏫',shijianmingFavor:'👨‍🔬',zhouruiFavor:'👩‍🏫',hanjieFavor:'👨‍🏫',cherryFavor:'👩‍🏫',liguoruiFavor:'👨‍💻',songjunliFavor:'👩‍🏫',lixinyaoFavor:'👩‍🏫',huyeFav:'🐯',naikouFav:'🍼',jingyeFav:'🏅'};
 
 var COURSE_NAMES={academicLang:'学术语言交流与沟通（中级）',cppProg:'C++程序设计基础',advancedMath:'高等数学建模A',pe:'体育',moralLaw:'思想道德与法治',dataAnalysis:'智能数据分析导论',mentalHealth:'心理健康教育',careerPlan:'大学生职业生涯规划',xingshiZhengce:'形势与政策',laborEducation:'劳动教育'};
 var TEACHER_NAMES={hanpeng:'韩鹏',tania:'Tania',shijianming:'史鉴明',zhourui:'周蕊',hanjie:'韩杰',cherry:'Cherry',liguorui:'李国瑞',songjunli:'宋俊丽',lixinyao:'李心瑶'};
@@ -66,7 +66,7 @@ function defaultState(){
   return {
     year:2024,month:8,day:15,
     health:100,happiness:100,wisdom:100,charm:100,
-    glory:0,money:3700,singing:0,
+    glory:0,money:3700,singing:0,performance:0,
     hasPengyuanCard:false,hasPhoneCard:false,
     talentPerformed:false,talentSuccess:false,wonElection:false,
     tuanxiaoApplied:false,tuanxiaoAccepted:false,
@@ -91,10 +91,13 @@ function defaultState(){
     storyLog:[],
     putonghuaRegistered:false,zhuchirenRegistered:false,
     stocksUnlocked:false,
-    holdings:{niaoye:{shares:0,costBasis:0},benben:{shares:0,costBasis:0},bobi:{shares:0,costBasis:0}},
+    holdings:{niaoye:{shares:0,costBasis:0,todayBought:0},benben:{shares:0,costBasis:0,todayBought:0},bobi:{shares:0,costBasis:0,todayBought:0}},
     stockPrices:{niaoye:18,benben:12,bobi:8},
     lastStockDay:'',stockPrevPrices:{niaoye:18,benben:12,bobi:8},
+    stockHistory:{niaoye:[18,18,18,18,18,18,18,18,18,18],benben:[12,12,12,12,12,12,12,12,12,12],bobi:[8,8,8,8,8,8,8,8,8,8]},
+    stockTrades:{niaoye:[],benben:[],bobi:[]},
     zaocaoExempt:false,
+    _dramaTeam:[],
     girlfriends:[],
     classmateFavor:{huye:80,naikou:80,jingye:80,langweifu:50,caomugai:50,zhihuanming:50,sukongfen:50,hannaotan:50,yinnaichun:50,yanhongjiu:50,shenyehuai:50,xiaogumai:50,nietuofei:50,guyiqi:50,tonghuke:50,xiataoming:50,jiaomudong:50,xuanliuqi:50,gantuofen:50,lihuayi:50,luoxu:50,qiebofeng:50,goutongmian:50,suxiaonuan:50,dilihei:40,shantanjing:40,hesijia:40,eryi:40,junqibang:40,zichunqian:40}
   };
@@ -122,6 +125,7 @@ function updatePanel(){
   $('val-glory').textContent=GS.glory;
   $('val-money').textContent=GS.money;
   $('val-singing').textContent=GS.singing;
+  $('val-performance').textContent=GS.performance;
   $('val-pengyuan').textContent=GS.pengyuanBalance;
   $('val-teacher-favor').textContent=GS.teacherFavor;
   $('val-classmate-favor').textContent=GS.classmateFavor;
@@ -2074,6 +2078,190 @@ STORY_DAYS['2024-10-14']={
     '"嗯——那你路上慢点。晚安。"苏小暖把热可可塞到你手里，一个人站在路灯下目送你的背影消失在雨后的夜色中。她把外套的拉链拉到最上面，在路灯下又站了一会儿，才慢慢转身走回了自己的宿舍。')
 };
 
+// ==================== 10.15 剧情 ====================
+STORY_DAYS['2024-10-15']={
+  title:'形势与政策·高数·学术语言·Drama组队',
+  phases:[
+    // Phase 1: Morning opening
+    {type:'auto',tag:'☀️ 早晨',title:'新的一天',
+     text:'清晨天色渐亮，校园慢慢恢复喧闹。你收拾妥当走出宿舍，新一天的校园生活正式开启。十月的晨风带着微凉，走廊里陆续响起脚步声——早八的课表在等着你。心绪随着周遭氛围慢慢活络起来。',
+     effects:{}},
+    // Phase 2: 形势与政策 韩杰
+    makeMainPhase('上午①','形势与政策 · 任课教师：韩杰',
+      '上午第一节是韩杰老师的形势与政策课。韩老师戴着金丝眼镜，一如既往地儒雅沉稳。\n\n你站在教学楼门口犹豫了一下——秋日早晨的被窝余温还在身上，这一节是去还是不去？',
+      [
+        {text:'准时前往教室上课',effects:{},
+         flags:{_attendedHanjie15:true},
+         result:'你推开教室门，韩杰老师已经站在讲台上调试PPT了。教室里稀稀拉拉坐了十几个人——早八的课，总是有人迟到。你找了个靠前的位置坐下，翻开笔记本。'},
+        {text:'赖在被窝里酣睡，彻底放空身心',effects:{happiness:5,health:6},
+         hidden:{desc:'形势与政策评级下降',gEffects:{xingshiZhengce:-1}},
+         result:'你翻了个身，把被子裹得更紧。韩杰老师的课——偶尔缺席一次应该问题不大。你在温暖的被窝里沉沉睡去，彻底放空了身心。\n\n⚠️ 形势与政策评级下降'}
+      ]),
+    // Phase 2b: 随堂测试
+    {type:'main',tag:'课堂',title:'韩杰·随堂测试提问',
+     condSkip:function(){return !GS._attendedHanjie15;},
+     text:'课堂行进中途，韩杰老师突然合上书本，推了推眼镜："刚才讲的内容——找一位同学来回答一下。"\n\n他的目光扫过教室，最终停在了你的方向。教室里安静下来，周围的同学纷纷低头避开眼神接触。',
+     choices:[
+       {text:'主动起身，认真梳理思路完成解答',effects:{wisdom:6},
+        result:'你站起身，将刚才韩老师讲的核心论点重新组织了一遍，条理清晰地完成了回答。韩杰老师频频点头，在花名册上你的名字旁画了一个圈。全班同学投来佩服的目光。'},
+       {text:'低头保持沉默，不参与作答',effects:{wisdom:-4},
+        hidden:{desc:'形势与政策评级下降',gEffects:{xingshiZhengce:-1}},
+        result:'你埋下头假装在笔记本上写着什么。韩杰老师的目光在你身上停留了几秒，然后转向另一位同学。课堂继续，但你感到一丝惭愧。\n\n⚠️ 形势与政策评级下降'}
+     ]},
+    // Phase 3: 高等数学 周蕊
+    makeMainPhase('上午②','高等数学建模A · 任课教师：周蕊',
+      '第二节是周蕊老师的高等数学课。黑板上已经写满了上节课留下的公式推导。\n\n周蕊老师抱着一摞教案走进教室，推了推眼镜："今天继续矩阵运算——大家先把上节课的作业拿出来对一下。"\n\n你站在走廊里，看着窗外的阳光——去还是不去？',
+      [
+        {text:'走进教室落座，投入课堂学习',effects:{wisdom:7},
+         flags:{_attendedMath15:true},
+         result:'你找了靠窗的位置坐下。周蕊老师的板书一如既往地工整清晰——行列式展开、矩阵转置，一步步推导下来，思路格外顺畅。两节课下来笔记本记了满满五页。'},
+        {text:'继续卧床休息，不前往课堂',effects:{happiness:5,health:6},sleepBonus:true,
+         result:'你果断转身回了宿舍。高等数学——少去一节问题不大，反正可以借同学的笔记补。你躺回床上，享受着秋日上午的慵懒时光。'}
+      ]),
+    // Phase 3b: 雨课堂触发
+    {type:'conditional',tag:'系统',title:'雨课堂随机签到',
+     condCustom:function(){return true;},prob:0.5,
+     text_applied:'课讲到一半，周蕊老师突然停下板书，打开了雨课堂系统。"扫码签到——今天系统会随机抽取一道课堂练习题。"',
+     sText:'手机弹出雨课堂答题界面——随堂测验来了！',sFlags:{_signinTriggered15:true},
+     fText:'雨课堂系统启动了，但今天运气不错——随机抽查没有抽到你们班。'},
+    // Phase 3c: 雨课堂quiz
+    {type:'main',tag:'雨课堂',title:'雨课堂随堂测验',
+     condSkip:function(){return !GS._signinTriggered15||!GS._attendedMath15;},
+     text:'雨课堂系统弹出一道函数计算题：\n\n已知函数 y = 2x² + 3x - 1，求 x=2 时的函数计算结果。\n\n请选择你的答案：',
+     quizCorrectIndex:2,
+     choices:[
+       {text:'A. 9',effects:{},wrongResult:'回答错误。y = 2×4 + 3×2 - 1 = 8 + 6 - 1 = 13，正确答案是C。'},
+       {text:'B. 11',effects:{},wrongResult:'回答错误。y = 2×4 + 3×2 - 1 = 8 + 6 - 1 = 13，正确答案是C。'},
+       {text:'C. 13',effects:{},correctEffects:{wisdom:5},correctResult:'回答正确！x=2时，y = 2×2² + 3×2 - 1 = 2×4 + 6 - 1 = 8 + 6 - 1 = 13。周蕊老师赞许地点了点头。悟性+5。',wrongResult:'回答错误。正确答案是C. 13。'},
+       {text:'D. 15',effects:{},wrongResult:'回答错误。y = 2×4 + 3×2 - 1 = 8 + 6 - 1 = 13，正确答案是C。'}
+     ]},
+    // Phase 3d: 雨课堂缺席惩罚
+    {type:'auto',tag:'系统',title:'雨课堂签到·缺勤记录',
+     condSkip:function(){return !GS._signinTriggered15||GS._attendedMath15;},
+     text:'你正在宿舍休息，手机弹出雨课堂签到答题提醒——但你已经逃课了！缺勤记录同步至教师后台。\n\n班级群里助教发了消息："今日雨课堂未签到同学请注意，缺勤记录已备案。"',
+     effects:{glory:-4,zhouruiFavor:-5},gEffects:{advancedMath:-5}},
+    // Phase 4: 学术语言 Tania
+    makeMainPhase('下午①','学术语言交流与沟通（中级）· 任课教师：Tania',
+      '下午第一节，Tania老师端着一杯热拿铁走进教室，脸上挂着标志性的微笑。\n\n"Good afternoon everyone! Hope you had a productive morning." 她的课堂向来氛围轻松，但互动频率也高——随时可能被点名上去分享。',
+      [
+        {text:'按时来到课堂，融入课堂氛围',effects:{taniaFavor:5},
+         flags:{_attendedTania15:true},
+         result:'你找了个中间位置坐下。Tania老师在讲台上调试PPT，看到你进门冲你笑了笑。课堂氛围轻松活泼，几个同学已经在用英语聊天了。'},
+        {text:'留在宿舍休息，远离课堂节奏',effects:{health:6,happiness:5},sleepBonus:true,
+         result:'你站在宿舍门口想了想——学术语言中级，少去一节问题不大。退回房间关上门，打开一部电影。下午的时光在休闲中缓缓流淌。'}
+      ]),
+    // Phase 4b: 分享环节
+    {type:'main',tag:'🎤 分享',title:'Tania·近期生活分享',
+     condSkip:function(){return !GS._attendedTania15;},
+     text:'课堂进行到互动环节，Tania老师拍了拍手："Alright——let\'s do a quick sharing! Tell us something interesting that happened recently. Anything——a funny story, a new discovery, a random thought."\n\n她的目光扫过全班，最终带着笑意停在了你身上。',
+     choices:[
+       {text:'大方上台，简单分享近期的日常与趣事',effects:{charm:-3,wisdom:6},
+        result:'你走上讲台，用英语分享了最近几天的一些小趣事——食堂新出的菜品、昨天看的一部电影、今天早上差点迟到的经历。虽然表达有些磕绊，但全班同学听得津津有味，Tania老师频频点头。'},
+       {text:'礼貌推辞，委婉拒绝分享邀请',effects:{taniaFavor:-5},
+        result:'你摆了摆手，用英语说了句"Maybe next time"。Tania老师笑着点了点头，但你能看出她眼中闪过一丝失望。她转身邀请了另一位举手的同学。'}
+     ]},
+    // Phase 4c: Hugo趣事
+    {type:'conditional',tag:'系统',title:'Tania·Hugo的趣事',
+     condCustom:function(){return true;},prob:0.4,
+     text_applied:'课堂接近尾声，Tania老师突然笑着拍了拍手："Oh! Before we finish——I have to tell you what Hugo did yesterday!"',
+     sText:'Tania开始分享Hugo的最新糗事。',sFlags:{_hugoTriggered15:true},
+     fText:'Tania老师看了看时间，决定今天不讲闲话了。她直接切回了正课内容。'},
+    // Phase 4d: Hugo choice
+    {type:'main',tag:'系统',title:'Tania·Hugo的趣事',
+     condSkip:function(){return !GS._hugoTriggered15||!GS._attendedTania15;},
+     text:'Tania老师讲得眉飞色舞——Hugo昨天趁她不在家，把沙发上的抱枕拖到了后院，在上面滚来滚去，白色的枕套变成了泥巴色。她翻出手机里的"罪证"照片投到屏幕上，全班哄堂大笑。\n\nTania注意到你也笑着在看，冲你眨了眨眼。',
+     choices:[
+       {text:'安静聆听，配合互动，被逗得开怀大笑',effects:{taniaFavor:4,wisdom:-3},
+        result:'你完全被Tania绘声绘色的讲述吸引住了。她模仿Hugo被发现时的无辜表情，全班笑得前仰后合。不过等你回过神来，下课时间已经过了五分钟，Tania似乎完全沉浸在分享中忘掉了下课铃。'},
+       {text:'不予理会，趁这个空档自顾自休憩放松',effects:{taniaFavor:-4,happiness:5},
+        result:'你趁着大家都在听Hugo的故事，悄悄靠在椅背上闭目养神。Tania老师讲得眉飞色舞，但你实在有些累了。虽然错过了老师的快乐分享，但这几分钟的放空让你的精神恢复了不少。'}
+     ]},
+    // Phase 5: Drama通知
+    {type:'auto',tag:'📢 通知',title:'Drama舞台考试·组队通知',
+     text:'下午课程间隙，班级QQ通知群突然弹出一条消息：\n\n📢 【Drama舞台考试通知】\n🎭 本学期英语Drama舞台考试正式启动！\n👥 要求：自由组队，每组5人\n📝 任务：编排英语剧目，期末进行舞台表演考核\n⏰ 组队截止：10月18日\n⚠️ 注意事项：每位同学必须加入一个小组，未组队者系统将随机分配。\n\n请尽快联系同学组建你的Drama小队！',
+     effects:{}},
+    // Phase 6: Drama手动组队
+    {type:'main',tag:'🎭 Drama',title:'Drama小队·手动邀请组队',
+     _textGen:function(){
+       if(!GS){return'Drama组队数据加载中……';}
+       if(GS._dramaAssembled)return 'Drama小队组建完成！';
+       if(!GS._dramaInvited)GS._dramaInvited=[];
+       if(!GS._dramaPending)GS._dramaPending=[];
+       var pool2=[];for(var cid3 in CLASSMATES){if(!CLASSMATES.hasOwnProperty(cid3))continue;if(GS._dramaInvited.indexOf(cid3)>=0)continue;pool2.push(cid3);}
+       if(pool2.length===0||GS._dramaPending.length>=4){
+         GS._dramaTeam=GS._dramaPending.slice();
+         if(GS._dramaTeam.length<4){
+           var fillPool=[];for(var cid4 in CLASSMATES){if(!CLASSMATES.hasOwnProperty(cid4))continue;if(GS._dramaTeam.indexOf(cid4)>=0)continue;fillPool.push(cid4);}
+           while(GS._dramaTeam.length<4&&fillPool.length>0){var ri4=Math.floor(Math.random()*fillPool.length);GS._dramaTeam.push(fillPool.splice(ri4,1)[0]);}
+         }
+         GS._dramaAssembled=1;GS._dramaInvited=[];GS._dramaPending=[];
+         return '所有同学已邀请完毕！\n\n你的Drama小队成员：\n'+GS._dramaTeam.map(function(id){return '• '+CLASSMATES[id].name;}).join('\n')+'\n\n✅ 组队完成！共'+GS._dramaTeam.length+'名队员。';
+       }
+       var txt='当前已接受邀请：'+(GS._dramaPending.length||0)+'人 / 需4人\n已尝试邀请：'+GS._dramaInvited.length+'人\n\n请选择下一位要邀请的同学：';
+       return txt;
+     },
+     _choicesGen:function(){
+       if(!GS)return[{text:'加载中……',effects:{}}];
+       if(GS._dramaAssembled)return [{text:'组队已完成，继续',effects:{}}];
+       if(!GS._dramaInvited)GS._dramaInvited=[];
+       if(!GS._dramaPending)GS._dramaPending=[];
+       if(GS._dramaPending.length>=4)return [{text:'组队已完成，继续',effects:{}}];
+       var pool2=[];for(var cid3 in CLASSMATES){if(!CLASSMATES.hasOwnProperty(cid3))continue;if(GS._dramaInvited.indexOf(cid3)>=0)continue;pool2.push(cid3);}
+       if(pool2.length===0)return [{text:'无更多同学可邀请，自动补齐',effects:{}}];
+       var opts=[];
+       for(var si=0;si<pool2.length;si++){var cid5=pool2[si];var cmData3=CLASSMATES[cid5];var fav3=GS.classmateFavor[cid5]||0;var rate3=Math.min(100,Math.max(0,fav3));opts.push({text:cmData3.name+'（好感'+fav3+'，成功率'+Math.floor(rate3)+'%）',effects:{},_dramaCmId:cid5,_dramaFav:fav3,_dramaRate:rate3});}
+       return opts;
+     }
+    },
+    // Phase 6b: Drama名称输入
+    {type:'main',tag:'🎭 Drama',title:'Drama节目名称',
+     condSkip:function(){return !GS._dramaAssembled;},
+     _textGen:function(){
+       if(!GS||!GS._dramaTeam)return'Drama名称加载中……';
+       return '你的Drama小队已经组建完成！\n\n队伍成员：'+GS._dramaTeam.map(function(id){return CLASSMATES[id]?CLASSMATES[id].name:id;}).join('、')+'\n\n请为你们的Drama节目取一个响亮的名字：';
+     },
+     choices:[
+       {text:'输入Drama节目名称',effects:{},_dramaNamePrompt:true,
+        result:''}
+     ]},
+    // Phase 7: 下午自由活动
+    {type:'main',tag:'自由活动',title:'下午自由时光',
+     text:'Drama组队的忙乱终于告一段落。下午第二节没有排课，你拥有一整段自由时间。秋日阳光透过走廊窗户斜斜洒在地面上，窗外的银杏叶黄了大半。',
+     choices:[
+       {text:'回宿舍睡觉，补足精力',effects:{health:7},sleepBonus:true,
+        result:'你回到宿舍一头倒在床上。下午的空闲时间最适合补觉——闭上眼睛，整个人陷在柔软的被子里，秋日凉风从半开的窗户吹进来，这一觉睡得格外踏实。'},
+       {text:'回宿舍打游戏，沉浸在休闲氛围中',effects:{happiness:8},
+        result:'你打开电脑登录游戏，戴上耳机。下午没课的时光，打游戏打得理直气壮。几局酣畅淋漓的对战下来，整个人神清气爽。'},
+       {text:'留在教室学习，刷题复盘知识点',effects:{wisdom:7},
+        result:'你找了间空教室坐下，翻开课本和笔记。利用这段时间把今天各科的重点内容从头梳理了一遍。安静的环境让思维格外清晰，几道高数题在反复推导后终于彻底弄懂了。'},
+       {text:'前往大创中心做客，和韩鹏碰面闲谈',effects:{},
+        cond:true,condAttr:'keChuangUnlocked',condTh:1,
+        sEffects:{hanpengHaoGan:6},sText:'你来到大创中心，韩鹏老师正在调试一台新到的开发板。看到你来，他热情地招呼你坐下，聊了聊最近的科创比赛动向。韩老师还分享了不少做项目的实用经验，一个下午的交流让你收获不少。',
+        fText:'你来到大创中心门口，发现门锁着。韩鹏老师今天可能外出开会了。',
+        result:'你来到大创中心门口，发现门锁着。'},
+       {text:'约女友出去散步闲聊，共度闲暇时光',effects:{},
+        cond:true,condAttr:'gfUnlocked',condTh:1,
+        sEffects:{gfFavor:4},sText:'你给女友发了条消息，两人约在小花园碰头。秋日的校园美得醉人——你们并肩走过银杏大道，脚下踩着金黄的落叶，聊着今天的课、吐槽着早八的困。她说和你在一起的慵懒下午，是最好的充电方式。',
+        fText:'你翻出手机通讯录——还是单身。不过一个人也挺自在的。',
+        result:'你翻出手机通讯录——还是单身。'},
+       {text:'和Drama小队汇合排练，打磨剧目',effects:{wisdom:4,performance:6},
+        cond:true,condAttr:'_dramaAssembled',condTh:1,
+        sText:'你联系了Drama小队的成员，大家约在空教室碰头。你们开始分配角色、对台词、走位排练。虽然只是第一次排练还有些生疏，但团队的默契在一点点建立。',
+        fText:'你还没有完成Drama组队。先找齐队友再来排练吧。',
+        result:'你还没有完成Drama组队。'}
+     ]},
+    // Phase 8: 晚自习
+    {type:'main',tag:'晚间',title:'晚间晚自习',
+     text:'夜幕降临，教学楼灯火通明。纪检部工作人员正在逐班清点晚自习出勤人数，手电筒的光束在走廊里扫来扫去。\n\n教室里已经坐了不少同学，安静得只能听见翻书声和偶尔的咳嗽声。你在教室门口站了一会儿——今天一整天下来已经有些累了。',
+     choices:[
+       {text:'准时参加晚自习，沉下心学习',effects:{happiness:-4,wisdom:7},
+        result:'你找了个靠窗的位置坐下，翻开笔记本开始整理今天各科的重点内容。形势与政策课的时政要点、高数课的矩阵运算、学术英语的词汇积累——安静的自习环境让思绪格外清晰。虽然枯燥，但满满当当的笔记让人心里踏实。'},
+       {text:'缺席晚自习，回宿舍钻进被窝睡大觉',effects:{glory:-5,health:6,happiness:5},sleepBonus:true,
+        result:'你趁纪检部不注意悄悄溜回了宿舍。缺勤记录被登记在册——但你躺在柔软的床上，全身肌肉逐渐放松，很快便沉入梦乡。比起在教室里枯坐两个小时，被窝的诱惑实在无法抵挡。\n\n⚠️ 荣耀-5（晚自习缺勤被登记）'}
+     ]}
+  ],
+};
+
 // ==================== 国庆假期渲染 ====================
 function renderCampusEvent(evt,callback){
   var storyEl=$('story-text');
@@ -2303,7 +2491,7 @@ function enterScriptedDays(){
 
 function processDay(){
   var dk=dateKey(GS.year,GS.month,GS.day);
-  var tmpFlags=['_attendedHanjie','_attendedMath','_signinTriggered','_attendedCherry','_quizzzTriggered','_attendedData','_paperTriggered','_attendedTania','_hugoTriggered','_cppAttended','_attendedCherry10','_attendedMath10','_signinTriggered10','_attendedTania11','_attendedData11','_paperTriggered11','_attendedMath11','_signinTriggered11','_hugoTriggered11','_wentACM','_attendedCpp14','_attendedMoral14','_attendedTania14','_attendedLabor14','_dailyInteractIds','_gfEventFired'];
+  var tmpFlags=['_attendedHanjie','_attendedMath','_signinTriggered','_attendedCherry','_quizzzTriggered','_attendedData','_paperTriggered','_attendedTania','_hugoTriggered','_cppAttended','_attendedCherry10','_attendedMath10','_signinTriggered10','_attendedTania11','_attendedData11','_paperTriggered11','_attendedMath11','_signinTriggered11','_hugoTriggered11','_wentACM','_attendedCpp14','_attendedMoral14','_attendedTania14','_attendedLabor14','_attendedHanjie15','_attendedMath15','_signinTriggered15','_attendedTania15','_hugoTriggered15','_dailyInteractIds','_gfEventFired','_dramaAssembled'];
   for(var tf=0;tf<tmpFlags.length;tf++){delete GS[tmpFlags[tf]];}
   if(dk==='2024-10-14'){GS.weather=WEATHER_TYPES.rain;}
   else{GS.weather=pickDailyWeather();}
@@ -2451,7 +2639,8 @@ function renderDayPhase(dayData,idx){
       }
     }
     var changes=doEffects(eff);
-    var ft=(tagHtml+'<strong>'+ph.title+'</strong>\n\n'+ph.text).replace(/\n/g,'<br>');
+    var phText=ph._textGen?ph._textGen():ph.text;
+    var ft=(tagHtml+'<strong>'+ph.title+'</strong>\n\n'+phText).replace(/\n/g,'<br>');
     storyEl.innerHTML=cur+'<br><br>'+ft;
     updatePanel();
     _logCtx={choice:'（自动事件）'};
@@ -2532,16 +2721,17 @@ function renderDayPhase(dayData,idx){
   }
 
   // main/evening 类型
-  try{
-  var ft4=(tagHtml+'<strong>'+(ph.title||'')+'</strong>\n\n'+(ph.text||'')).replace(/\n/g,'<br>');
+  var phText2=ph._textGen?ph._textGen():ph.text;
+  var phChoices=ph._choicesGen?ph._choicesGen():ph.choices;
+  var ft4=(tagHtml+'<strong>'+(ph.title||'')+'</strong>\n\n'+(phText2||'')).replace(/\n/g,'<br>');
   storyEl.innerHTML=cur+'<br><br>'+ft4;updatePanel();
   $('choices-area').innerHTML='';
-  if(!ph.choices||ph.choices.length===0){
+  if(!phChoices||phChoices.length===0){
     var btn4=document.createElement('button');btn4.className='primary';btn4.textContent='继续';
     btn4.onclick=function(){renderDayPhase(dayData,idx+1);};
     $('choices-area').appendChild(btn4);return;
   }
-  ph.choices.forEach(function(pc,ci){
+  phChoices.forEach(function(pc,ci){
     var btn=document.createElement('button');btn.textContent=pc.text;
     btn.onclick=function(){
       var eff4=Object.assign({},pc.effects||{}),hiddenInfo4=null;
@@ -2588,6 +2778,26 @@ function renderDayPhase(dayData,idx){
           pc._result=br+'\n\n🌧️ '+getWeatherSleepNarrative();
         }
       }
+      // Drama name input
+      if(pc._dramaNamePrompt){
+        var dramaName=prompt('请输入Drama节目名称：');
+        if(!dramaName||dramaName.trim()==='')dramaName='未命名Drama';
+        GS._dramaName=dramaName;
+        pc._result='你们的Drama节目定名为：\n\n🎭 '+dramaName+'\n\n祝排练顺利，期末舞台大放光彩！';
+      }
+      // Drama invite handling
+      if(pc._dramaCmId){
+        if(!GS._dramaInvited)GS._dramaInvited=[];
+        if(!GS._dramaPending)GS._dramaPending=[];
+        GS._dramaInvited.push(pc._dramaCmId);
+        var roll4=Math.random()*100;
+        var succ2=roll4<pc._dramaRate;
+        if(succ2)GS._dramaPending.push(pc._dramaCmId);
+        var dramaResult='📨 邀请 '+CLASSMATES[pc._dramaCmId].name+'（好感'+pc._dramaFav+'，成功率'+Math.floor(pc._dramaRate)+'%，掷骰'+Math.floor(roll4)+'）\n→ '+(succ2?'✅ 接受了邀请！':'❌ 拒绝了邀请。')+'\n\n当前队伍：'+(GS._dramaPending.length||0)+'人 / 需4人';
+        $('choices-area').innerHTML='';
+        showPopup('🎭 Drama组队',dramaResult,{},null,function(){updatePanel();renderDayPhase(dayData,idx);});
+        return;
+      }
       var allHidden=hiddenInfo4;if(riskInfo)allHidden=allHidden?allHidden+' | '+riskInfo:riskInfo;
       var changes4=doEffects(eff4);
       if(pc.cmFav){if(typeof pc.cmFav==='number'){var cmIdP=pc._cmId;if(cmIdP&&GS.classmateFavor&&GS.classmateFavor.hasOwnProperty(cmIdP)){var oldFav4=GS.classmateFavor[cmIdP]||0;GS.classmateFavor[cmIdP]=Math.max(0,oldFav4+pc.cmFav);changes4[cmIdP+'Fav']=pc.cmFav;}}else{for(var cmId2 in pc.cmFav){if(pc.cmFav.hasOwnProperty(cmId2)&&GS.classmateFavor&&GS.classmateFavor.hasOwnProperty(cmId2)){var oldFav4=GS.classmateFavor[cmId2]||0;GS.classmateFavor[cmId2]=Math.max(0,oldFav4+pc.cmFav[cmId2]);changes4[cmId2+'Fav']=pc.cmFav[cmId2];}}}}
@@ -2599,7 +2809,6 @@ function renderDayPhase(dayData,idx){
     };
     $('choices-area').appendChild(btn);
   });
-  }catch(e){finishDay(dayData);}
 }
 
 function renderGfEvent(dayData,afterCb){
@@ -3305,9 +3514,15 @@ function updateStockPrices(){
   if(!isWeekday(GS.year,GS.month,GS.day))return;
   if(HOLIDAY_DAYS[dateKey(GS.year,GS.month,GS.day)])return;
   GS.stockPrevPrices={niaoye:GS.stockPrices.niaoye,benben:GS.stockPrices.benben,bobi:GS.stockPrices.bobi};
+  // T+1: reset todayBought
+  var syms3=['niaoye','benben','bobi'];for(var ri=0;ri<syms3.length;ri++){GS.holdings[syms3[ri]].todayBought=0;}
   GS.stockPrices.niaoye=genStockPrice(GS.stockPrices.niaoye,STOCK_VOLS.niaoye);
   GS.stockPrices.benben=genStockPrice(GS.stockPrices.benben,STOCK_VOLS.benben);
   GS.stockPrices.bobi=genStockPrice(GS.stockPrices.bobi,STOCK_VOLS.bobi);
+  // Push to history (keep last 10)
+  if(!GS.stockHistory)GS.stockHistory={niaoye:[],benben:[],bobi:[]};
+  var syms2=['niaoye','benben','bobi'];
+  for(var si=0;si<syms2.length;si++){var ss=syms2[si];GS.stockHistory[ss].push(GS.stockPrices[ss]);if(GS.stockHistory[ss].length>10)GS.stockHistory[ss].shift();}
   GS.lastStockDay=dk;
 }
 function genStockPrice(prev,vol){
@@ -3349,17 +3564,29 @@ function renderStocksPanel(){
     var sign=change>=0?'+':'';
     var isLimitUp=(price>=prevPrice*1.099);
     var isLimitDown=(price<=prevPrice*0.901);
+    var chartId='stock-chart-'+s+'-'+Date.now()+Math.floor(Math.random()*1000);
     rows+='<div class="stock-item">'+
-      '<div class="stock-info">'+
-        '<div class="stock-name">'+STOCK_NAMES[s]+'</div>'+
-        '<div class="stock-price">¥'+price.toFixed(2)+' <span class="stock-change '+updown+'">'+sign+change.toFixed(2)+' ('+sign+changePct.toFixed(1)+'%)</span></div>'+
-        '<div class="stock-hold">持仓：<strong>'+(h.shares||0)+'股</strong> 成本：¥'+(h.costBasis||0).toFixed(2)+' 市值：¥'+mv.toFixed(2)+' 盈亏：<span class="'+(pl>=0?'pos':'neg')+'">'+(pl>=0?'+':'')+pl.toFixed(2)+'</span></div>'+
+      '<div class="stock-row">'+
+        '<div class="stock-info">'+
+          '<div class="stock-name">'+STOCK_NAMES[s]+'</div>'+
+          '<div class="stock-price">¥'+price.toFixed(2)+' <span class="stock-change '+updown+'">'+sign+change.toFixed(2)+' ('+sign+changePct.toFixed(1)+'%)</span></div>'+
+          '<div class="stock-hold">持仓：<strong>'+(h.shares||0)+'股</strong> 成本：¥'+(h.costBasis||0).toFixed(2)+' 市值：¥'+mv.toFixed(2)+' 盈亏：<span class="'+(pl>=0?'pos':'neg')+'">'+(pl>=0?'+':'')+pl.toFixed(2)+'</span></div>'+
+        '</div>'+
+        '<div class="stock-actions">'+
+          '<button onclick="buyStock(\''+s+'\')"'+(isLimitUp||!isTrade?' disabled':'')+'>买入1手</button>'+
+          '<button onclick="sellStock(\''+s+'\')"'+(isLimitDown||!isTrade?' disabled':'')+(h.shares<10?' disabled':'')+'>卖出1手</button>'+
+        '</div>'+
       '</div>'+
-      '<div class="stock-actions">'+
-        '<button onclick="buyStock(\''+s+'\')"'+(isLimitUp||!isTrade?' disabled':'')+'>买入1手</button>'+
-        '<button onclick="sellStock(\''+s+'\')"'+(isLimitDown||!isTrade?' disabled':'')+(h.shares<10?' disabled':'')+'>卖出1手</button>'+
+      '<div class="stock-bulk">'+
+        '<input type="number" id="qty-'+s+'" value="10" min="10" step="10" style="width:55px;padding:3px 5px;font-size:.78em;border:1px solid #d5cfc6;border-radius:4px;font-family:inherit;"> 股'+
+        '<button onclick="buyStock(\''+s+'\',document.getElementById(\'qty-'+s+'\').value)"'+(isLimitUp||!isTrade?' disabled':'')+'>批量买入</button>'+
+        '<button onclick="sellStock(\''+s+'\',document.getElementById(\'qty-'+s+'\').value)"'+(isLimitDown||!isTrade?' disabled':'')+(h.shares<10?' disabled':'')+'>批量卖出</button>'+
       '</div>'+
+      '<canvas id="'+chartId+'" class="stock-chart" width="320" height="100"></canvas>'+
     '</div>';
+    // Store chart data for rendering after DOM insert
+    if(!GS._stockChartQueue)GS._stockChartQueue=[];
+    GS._stockChartQueue.push({id:chartId, sym:s});
   }
 
   var html='<div class="stocks-overlay" id="stocks-overlay" onclick="if(event.target===this)closeStocks()">'+
@@ -3382,6 +3609,79 @@ function renderStocksPanel(){
   var div=document.createElement('div');
   div.innerHTML=html;
   document.body.appendChild(div.firstElementChild);
+  // Draw charts after DOM insertion
+  var chartQueue=GS._stockChartQueue;GS._stockChartQueue=null;
+  if(chartQueue){for(var ci=0;ci<chartQueue.length;ci++){drawStockChart(chartQueue[ci].id,chartQueue[ci].sym);}}
+}
+function drawStockChart(canvasId,sym){
+  var canvas=document.getElementById(canvasId);
+  if(!canvas)return;
+  var ctx=canvas.getContext('2d');
+  var hist=GS.stockHistory[sym];
+  if(!hist||hist.length===0)return;
+  var w=canvas.width,h=canvas.height;
+  var padL=42,padR=8,padT=16,padB=8;
+  var xStep=(w-padL-padR)/(hist.length-1);
+  var min=Math.min.apply(null,hist),max=Math.max.apply(null,hist);
+  var expand=(max-min)*0.1||0.5;
+  var yMin=min-expand,yMax=max+expand;
+  var yRange=yMax-yMin||1;
+  ctx.clearRect(0,0,w,h);
+  // Y-axis 5 labels: yMax, max, mid, min, yMin
+  ctx.fillStyle='#8b7d6b';ctx.font='8px sans-serif';ctx.textAlign='right';
+  var yLabels=[yMax,max,(max+min)/2,min,yMin];
+  var yPositions=[0,0.25,0.5,0.75,1];
+  for(var gi=0;gi<5;gi++){
+    var gy=padT+yPositions[gi]*(h-padT-padB);
+    ctx.fillText('¥'+yLabels[gi].toFixed(1),padL-4,gy+3);
+    ctx.strokeStyle='#e8e2d8';ctx.lineWidth=0.5;
+    ctx.beginPath();ctx.moveTo(padL,gy);ctx.lineTo(w-padR,gy);ctx.stroke();
+  }
+  // Line
+  ctx.strokeStyle='#1a3a5c';ctx.lineWidth=1.5;ctx.beginPath();
+  for(var pi=0;pi<hist.length;pi++){
+    var px=padL+pi*xStep;
+    var py=padT+(h-padT-padB)*(1-(hist[pi]-yMin)/yRange);
+    if(pi===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);
+  }
+  ctx.stroke();
+  // Dot at current
+  var lastX=padL+(hist.length-1)*xStep;
+  var lastY=padT+(h-padT-padB)*(1-(hist[hist.length-1]-yMin)/yRange);
+  ctx.fillStyle=hist[hist.length-1]>=hist[hist.length-2]?'#c0392b':'#1e7e34';
+  ctx.beginPath();ctx.arc(lastX,lastY,2.5,0,Math.PI*2);ctx.fill();
+  // B/S/T markers
+  var trades=GS.stockTrades&&GS.stockTrades[sym]?GS.stockTrades[sym]:[];
+  var markers={};
+  for(var ti=0;ti<trades.length;ti++){
+    var tr=trades[ti];
+    for(var hi=hist.length-1;hi>=0;hi--){
+      if(Math.abs(hist[hi]-tr.price)<0.01){
+        var mk=markers[hi]||'';
+        if(tr.type==='B'&&mk.indexOf('B')<0)mk+='B';
+        if(tr.type==='S'&&mk.indexOf('S')<0)mk+='S';
+        markers[hi]=mk;
+        break;
+      }
+    }
+  }
+  for(var mkHi in markers){
+    if(!markers.hasOwnProperty(mkHi))continue;
+    var mkLabel=markers[mkHi];
+    var mkX=padL+parseInt(mkHi)*xStep;
+    var mkY=padT+(h-padT-padB)*(1-(hist[parseInt(mkHi)]-yMin)/yRange);
+    // White outline for visibility
+    ctx.font='bold 10px sans-serif';ctx.textAlign='center';
+    var label=mkLabel==='BS'||mkLabel==='SB'?'T':mkLabel;
+    var lx=mkX,ly=mkY-12;
+    ctx.strokeStyle='#fff';ctx.lineWidth=3;ctx.strokeText(label,lx,ly);
+    if(label==='T')ctx.fillStyle='#e67e22';
+    else if(label==='B')ctx.fillStyle='#c0392b';
+    else ctx.fillStyle='#1e7e34';
+    ctx.fillText(label,lx,ly);
+  }
+  // Clean old trades (outside 10-day window)
+  if(trades.length>20){GS.stockTrades[sym]=trades.slice(-20);}
 }
 
 function closeStocks(){
@@ -3389,42 +3689,60 @@ function closeStocks(){
   if(el)el.parentNode.removeChild(el);
 }
 
-function buyStock(sym){
+function buyStock(sym,qty){
   updateStockPrices();
   var price=GS.stockPrices[sym];
-  var total=price*10*1.01;
+  qty=parseInt(qty)||10;
+  if(qty%10!==0||qty<10){showToast('数量必须为10的整数倍（1手=10股）');return;}
+  var shares=qty;
+  var cost=price*shares;
+  var fee=cost*0.01;
+  var total=cost+fee;
+  var hands=shares/10;
   var limitUp=GS.stockPrevPrices[sym]?price>=GS.stockPrevPrices[sym]*1.099:false;
   if(limitUp){showToast('该股票已涨停，无法买入！');return;}
-  if(GS.money<total){showToast('金钱不足！买入1手需 ¥'+total.toFixed(2)+'（含1%手续费）');return;}
-  if(!confirm('确认买入 '+STOCK_NAMES[sym]+' 1手（10股）？\n价格：¥'+price.toFixed(2)+'/股\n手续费(1%)：¥'+(price*10*0.01).toFixed(2)+'\n合计：¥'+total.toFixed(2))){
+  if(GS.money<total){showToast('金钱不足！买入'+hands+'手需 ¥'+total.toFixed(2)+'（含1%手续费）');return;}
+  if(!confirm('确认买入 '+STOCK_NAMES[sym]+' '+hands+'手（'+shares+'股）？\n价格：¥'+price.toFixed(2)+'/股\n手续费(1%)：¥'+fee.toFixed(2)+'\n合计：¥'+total.toFixed(2))){
     return;
   }
   GS.money=GS.money-total;
   var h=GS.holdings[sym];
-  h.shares+=10;
-  h.costBasis+=price*10*1.01;
+  h.shares+=shares;
+  h.costBasis+=total;
+  h.todayBought=(h.todayBought||0)+shares;
   updatePanel();
-  showToast('✅ 成功买入 '+STOCK_NAMES[sym]+' 1手！');
+  if(!GS.stockTrades)GS.stockTrades={niaoye:[],benben:[],bobi:[]};
+  GS.stockTrades[sym].push({type:'B',price:price,date:fmtDate(GS.year,GS.month,GS.day)});
+  showToast('✅ 成功买入 '+STOCK_NAMES[sym]+' '+hands+'手！');
   renderStocksPanel();
 }
 
-function sellStock(sym){
+function sellStock(sym,qty){
   updateStockPrices();
   var price=GS.stockPrices[sym];
   var h=GS.holdings[sym];
+  qty=parseInt(qty)||10;
+  if(qty%10!==0||qty<10){showToast('数量必须为10的整数倍（1手=10股）');return;}
+  var shares=qty;
+  var sellable=h.shares-(h.todayBought||0);
+  if(sellable<shares){showToast('T+1限制！今日买入的'+(h.todayBought||0)+'股需下个交易日才能卖出。当前可卖：'+sellable+'股');return;}
+  var cost=price*shares;
+  var fee=cost*0.01;
+  var revenue=cost-fee;
+  var hands=shares/10;
   var limitDown=GS.stockPrevPrices[sym]?price<=GS.stockPrevPrices[sym]*0.901:false;
   if(limitDown){showToast('该股票已跌停，无法卖出！');return;}
-  if(h.shares<10){showToast('持仓不足！当前持有 '+h.shares+' 股。');return;}
-  var revenue=price*10*0.99;
-  if(!confirm('确认卖出 '+STOCK_NAMES[sym]+' 1手（10股）？\n价格：¥'+price.toFixed(2)+'/股\n手续费(1%)：¥'+(price*10*0.01).toFixed(2)+'\n到账：¥'+revenue.toFixed(2))){
+  if(!confirm('确认卖出 '+STOCK_NAMES[sym]+' '+hands+'手（'+shares+'股）？\n价格：¥'+price.toFixed(2)+'/股\n手续费(1%)：¥'+fee.toFixed(2)+'\n到账：¥'+revenue.toFixed(2))){
     return;
   }
   GS.money=GS.money+revenue;
   var avgCost=h.shares>0?h.costBasis/h.shares:0;
-  h.shares-=10;
-  h.costBasis=Math.max(0,h.costBasis-avgCost*10);
+  h.shares-=shares;
+  h.costBasis=Math.max(0,h.costBasis-avgCost*shares);
   updatePanel();
-  showToast('✅ 成功卖出 '+STOCK_NAMES[sym]+' 1手！');
+  if(!GS.stockTrades)GS.stockTrades={niaoye:[],benben:[],bobi:[]};
+  GS.stockTrades[sym].push({type:'S',price:price,date:fmtDate(GS.year,GS.month,GS.day)});
+  showToast('✅ 成功卖出 '+STOCK_NAMES[sym]+' '+hands+'手！');
   renderStocksPanel();
 }
 
@@ -3645,7 +3963,7 @@ function checkMultiGfDiscovery(callback){
   if(Math.random()*100>=prob){if(callback)callback();return;}
   var seq4=++GS._popupSeq||(GS._popupSeq=1);
   var overlay=document.createElement('div');overlay.className='popup-overlay';
-  overlay.innerHTML='<div class="popup-box"><div class="popup-title">🚨 出轨被发现！</div><div class="popup-result">你同时交往'+count+'名女友的事情被发现了！\n\n几位女友聚在一起，气氛剑拔弩张。你必须立刻做出选择：\n\n• 💰 花费200金钱安抚所有女友，化解矛盾\n• 💔 立即强制分手一名女友（无冷静期，扣除30好感）</div><button class="popup-btn" id="multi-pay-'+seq4+'" style="margin-bottom:6px;">💰 花费200金钱安抚</button><button class="popup-btn" id="multi-force-'+seq4+'" style="background:#c0392b;color:#fff;">💔 强制分手一名女友</button></div>';
+  overlay.innerHTML='<div class="popup-box"><div class="popup-title">🚨 出轨被发现！</div><div class="popup-result">你同时交往'+count+'名女友的事情被发现了！\n\n几位女友聚在一起，气氛剑拔弩张。你必须立刻做出选择：\n\n• 💰 花费'+(count*100)+'金钱安抚所有女友，化解矛盾\n• 💔 立即强制分手一名女友（无冷静期，扣除30好感）</div><button class="popup-btn" id="multi-pay-'+seq4+'" style="margin-bottom:6px;">💰 花费'+(count*100)+'金钱安抚</button><button class="popup-btn" id="multi-force-'+seq4+'" style="background:#c0392b;color:#fff;">💔 强制分手一名女友</button></div>';
   document.body.appendChild(overlay);
   document.getElementById('multi-pay-'+seq4).onclick=function(){
     overlay.remove();
@@ -3766,7 +4084,7 @@ function saveGame(){
   var data={
     v:4,year:GS.year,month:GS.month,day:GS.day,
     health:GS.health,happiness:GS.happiness,wisdom:GS.wisdom,charm:GS.charm,
-    glory:GS.glory,money:GS.money,singing:GS.singing,
+    glory:GS.glory,money:GS.money,singing:GS.singing,performance:GS.performance,
     hasPengyuanCard:GS.hasPengyuanCard,hasPhoneCard:GS.hasPhoneCard,
     talentPerformed:GS.talentPerformed,talentSuccess:GS.talentSuccess,wonElection:GS.wonElection,
     tuanxiaoApplied:GS.tuanxiaoApplied,tuanxiaoAccepted:GS.tuanxiaoAccepted,
@@ -3793,7 +4111,7 @@ function saveGame(){
     acmRegistered:GS.acmRegistered,lastBonusDay:GS.lastBonusDay,weather:GS.weather,
     putonghuaRegistered:GS.putonghuaRegistered,zhuchirenRegistered:GS.zhuchirenRegistered,
     stocksUnlocked:GS.stocksUnlocked,holdings:GS.holdings,stockPrices:GS.stockPrices,
-    lastStockDay:GS.lastStockDay,stockPrevPrices:GS.stockPrevPrices,zaocaoExempt:GS.zaocaoExempt,
+    lastStockDay:GS.lastStockDay,stockPrevPrices:GS.stockPrevPrices,stockHistory:GS.stockHistory,stockTrades:GS.stockTrades,zaocaoExempt:GS.zaocaoExempt,
     girlfriends:GS.girlfriends,
     storyLog:GS.storyLog
   };
@@ -3818,7 +4136,7 @@ function resetToTitle(){GS=defaultState();renderTitle();}
 
 function exportSave(){
   if(!GS||GS.phase==='title'||GS.phase==='allocation'){showToast('无存档可导出');return;}
-  var data={v:4,year:GS.year,month:GS.month,day:GS.day,health:GS.health,happiness:GS.happiness,wisdom:GS.wisdom,charm:GS.charm,glory:GS.glory,money:GS.money,singing:GS.singing,hasPengyuanCard:GS.hasPengyuanCard,hasPhoneCard:GS.hasPhoneCard,talentPerformed:GS.talentPerformed,talentSuccess:GS.talentSuccess,wonElection:GS.wonElection,tuanxiaoApplied:GS.tuanxiaoApplied,tuanxiaoAccepted:GS.tuanxiaoAccepted,dachuangJoined:GS.dachuangJoined,hanpengHaoGan:GS.hanpengHaoGan,cet4Applied:GS.cet4Applied,deskBought:GS.deskBought,clubApplied:GS.clubApplied,clubType:GS.clubType,keChuangUnlocked:GS.keChuangUnlocked,sheTuanUnlocked:GS.sheTuanUnlocked,tuanxiaoWeekBan:GS.tuanxiaoWeekBan,gfUnlocked:GS.gfUnlocked,gfName:GS.gfName,gfFavor:GS.gfFavor,inventory:GS.inventory,phase:GS.phase,currentNode:GS.currentNode,currentDay:GS.currentDay,currentPhaseIdx:GS.currentPhaseIdx,pengyuanBalance:GS.pengyuanBalance,tuanxiaoWisdomPending:GS.tuanxiaoWisdomPending,teacherFavor:GS.teacherFavor,classmateFavor:GS.classmateFavor,lastMealDay:GS.lastMealDay,breakupProb:GS.breakupProb,courseGrades:GS.courseGrades,taniaFavor:GS.taniaFavor,shijianmingFavor:GS.shijianmingFavor,zhouruiFavor:GS.zhouruiFavor,hanpengUnlocked:GS.hanpengUnlocked,taniaUnlocked:GS.taniaUnlocked,shijianmingUnlocked:GS.shijianmingUnlocked,zhouruiUnlocked:GS.zhouruiUnlocked,weekendEventReduction:GS.weekendEventReduction,holidayRoute:GS.holidayRoute,hanjieFavor:GS.hanjieFavor,cherryFavor:GS.cherryFavor,liguoruiFavor:GS.liguoruiFavor,hanjieUnlocked:GS.hanjieUnlocked,cherryUnlocked:GS.cherryUnlocked,liguoruiUnlocked:GS.liguoruiUnlocked,songjunliFavor:GS.songjunliFavor,songjunliUnlocked:GS.songjunliUnlocked,lixinyaoFavor:GS.lixinyaoFavor,lixinyaoUnlocked:GS.lixinyaoUnlocked,acmRegistered:GS.acmRegistered,lastBonusDay:GS.lastBonusDay,weather:GS.weather,putonghuaRegistered:GS.putonghuaRegistered,zhuchirenRegistered:GS.zhuchirenRegistered,stocksUnlocked:GS.stocksUnlocked,holdings:GS.holdings,stockPrices:GS.stockPrices,lastStockDay:GS.lastStockDay,stockPrevPrices:GS.stockPrevPrices,zaocaoExempt:GS.zaocaoExempt,tuanxiaoWisdomPending:GS.tuanxiaoWisdomPending,girlfriends:GS.girlfriends,storyLog:GS.storyLog};
+  var data={v:4,year:GS.year,month:GS.month,day:GS.day,health:GS.health,happiness:GS.happiness,wisdom:GS.wisdom,charm:GS.charm,glory:GS.glory,money:GS.money,singing:GS.singing,performance:GS.performance,hasPengyuanCard:GS.hasPengyuanCard,hasPhoneCard:GS.hasPhoneCard,talentPerformed:GS.talentPerformed,talentSuccess:GS.talentSuccess,wonElection:GS.wonElection,tuanxiaoApplied:GS.tuanxiaoApplied,tuanxiaoAccepted:GS.tuanxiaoAccepted,dachuangJoined:GS.dachuangJoined,hanpengHaoGan:GS.hanpengHaoGan,cet4Applied:GS.cet4Applied,deskBought:GS.deskBought,clubApplied:GS.clubApplied,clubType:GS.clubType,keChuangUnlocked:GS.keChuangUnlocked,sheTuanUnlocked:GS.sheTuanUnlocked,tuanxiaoWeekBan:GS.tuanxiaoWeekBan,gfUnlocked:GS.gfUnlocked,gfName:GS.gfName,gfFavor:GS.gfFavor,inventory:GS.inventory,phase:GS.phase,currentNode:GS.currentNode,currentDay:GS.currentDay,currentPhaseIdx:GS.currentPhaseIdx,pengyuanBalance:GS.pengyuanBalance,tuanxiaoWisdomPending:GS.tuanxiaoWisdomPending,teacherFavor:GS.teacherFavor,classmateFavor:GS.classmateFavor,lastMealDay:GS.lastMealDay,breakupProb:GS.breakupProb,courseGrades:GS.courseGrades,taniaFavor:GS.taniaFavor,shijianmingFavor:GS.shijianmingFavor,zhouruiFavor:GS.zhouruiFavor,hanpengUnlocked:GS.hanpengUnlocked,taniaUnlocked:GS.taniaUnlocked,shijianmingUnlocked:GS.shijianmingUnlocked,zhouruiUnlocked:GS.zhouruiUnlocked,weekendEventReduction:GS.weekendEventReduction,holidayRoute:GS.holidayRoute,hanjieFavor:GS.hanjieFavor,cherryFavor:GS.cherryFavor,liguoruiFavor:GS.liguoruiFavor,hanjieUnlocked:GS.hanjieUnlocked,cherryUnlocked:GS.cherryUnlocked,liguoruiUnlocked:GS.liguoruiUnlocked,songjunliFavor:GS.songjunliFavor,songjunliUnlocked:GS.songjunliUnlocked,lixinyaoFavor:GS.lixinyaoFavor,lixinyaoUnlocked:GS.lixinyaoUnlocked,acmRegistered:GS.acmRegistered,lastBonusDay:GS.lastBonusDay,weather:GS.weather,putonghuaRegistered:GS.putonghuaRegistered,zhuchirenRegistered:GS.zhuchirenRegistered,stocksUnlocked:GS.stocksUnlocked,holdings:GS.holdings,stockPrices:GS.stockPrices,lastStockDay:GS.lastStockDay,stockPrevPrices:GS.stockPrevPrices,stockHistory:GS.stockHistory,stockTrades:GS.stockTrades,zaocaoExempt:GS.zaocaoExempt,tuanxiaoWisdomPending:GS.tuanxiaoWisdomPending,girlfriends:GS.girlfriends,storyLog:GS.storyLog};
   var str=JSON.stringify(data);
   var overlay=document.createElement('div');overlay.className='supermarket-overlay';
   overlay.innerHTML='<div class="save-export-box"><div class="se-title">📤 导出存档</div><textarea readonly id="se-textarea">'+str+'</textarea><div class="se-btns"><button class="se-btn-copy" id="se-copy">📋 一键复制</button><button class="se-btn-close" id="se-close">关闭</button></div></div>';
